@@ -53,7 +53,7 @@
 
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
 const MY_TOKEN = "@@@@@@@@-@@@@-@@@@-@@@@-@@@@@@@@@@@@";
-const TIMER_INTERVAL = "ticker.60";                         // every minute
+const TIMER_INTERVAL = "ticker.5";                         // every minute
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
 
