@@ -41,7 +41,6 @@
 
 /*
  * Declarations:
- *   CAR_MODEL: find your car model here: https://api.iternio.com/1/tlm/get_carmodels_list?api_key=32b2162f-9599-4647-8139-66e9f9528370
  *   OVMS_API_KEY : API_KEY to access to ABRP API, given by the developer
  *   MY_TOKEN : Your token (corresponding to your abrp profile)
  *   TIMER_INTERVAL : to subscribe to a ticker event
@@ -52,7 +51,6 @@
  *   objTimer : timer object
  */
 
-const CAR_MODEL = "@@:@@:@@:@@:@@";
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
 const MY_TOKEN = "@@@@@@@@-@@@@-@@@@-@@@@-@@@@@@@@@@@@";
 const TIMER_INTERVAL = "ticker.60";                         // every minute
@@ -62,7 +60,6 @@ const URL = "http://api.iternio.com/1/tlm/send";
 const DEFAULT_CFG = {
   "url": URL,
   "user_token": MY_TOKEN,      
-  "car_model": CAR_MODEL 
 };
 
 const CR = '\n';
@@ -96,7 +93,6 @@ function readConfig() {
     // config existing
     abrp_cfg.url = read_cfg.url;
     abrp_cfg.user_token = read_cfg.user_token;
-    abrp_cfg.car_model = read_cfg.car_model;
   }
 }
 
@@ -107,7 +103,6 @@ function InitTelemetryObj() {
     "soc": 0,
     "soh": 0,
     "speed": 0,
-    "car_model": abrp_cfg.car_model,
     "lat": 0,
     "lon": 0,
     "alt": 0,
@@ -139,7 +134,7 @@ function UpdateTelemetryObj(myJSON) {
 
   // using Math.floor avoids rounding up of .5 values to next whole number
   // as some vehicles report fractional values.  Abrp seems to only support integer values
-  read_num = Math.floor(Number(OvmsMetrics.Value("v.b.soc"))); 
+  read_num = Number(OvmsMetrics.Value("v.b.soc")); 
   if (myJSON.soc != read_num) {        
     myJSON.soc = read_num;
     sHasChanged += "_SOC:" + myJSON.soc + "%";
@@ -207,7 +202,6 @@ function UpdateTelemetryObj(myJSON) {
     myJSON.is_charging = 0;
   }
 
-  myJSON.car_model = abrp_cfg.car_model;
 
   return (sHasChanged !== "");
 }
