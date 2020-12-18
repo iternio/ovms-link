@@ -91,7 +91,6 @@ function readConfig() {
     OvmsConfig.SetValues("usr","abrp.",abrp_cfg);
   } else {
     // config existing
-    abrp_cfg.url = read_cfg.url;
     abrp_cfg.user_token = read_cfg.user_token;
   }
 }
