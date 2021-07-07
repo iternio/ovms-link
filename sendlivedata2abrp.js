@@ -10,8 +10,10 @@
  *
  * Enable:
  *  - install at above path
+ *  - config set usr abrp.user_token "your-token-goes-here"
  *  - add to /store/scripts/ovmsmain.js:
- *                 abrp = require("sendlivedata2arbp");
+ *                  abrp = require("abrp");
+ *                  abrp.send(1)
  *  - script reload
  *
  * Usage:
@@ -53,7 +55,7 @@
 
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
 const MY_TOKEN = "@@@@@@@@-@@@@-@@@@-@@@@-@@@@@@@@@@@@";
-const TIMER_INTERVAL = "ticker.5";                         // every minute
+const TIMER_INTERVAL = "ticker.10";                         // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
 
@@ -104,7 +106,7 @@ function InitTelemetryObj() {
     "speed": 0,
     "lat": 0,
     "lon": 0,
-    "alt": 0,
+    "elevation": 0,
     "ext_temp": 0,
     "is_charging": 0,
     "batt_temp": 0,
@@ -131,8 +133,6 @@ function UpdateTelemetryObj(myJSON) {
     bMotorsOn = false;
   }
 
-  // using Math.floor avoids rounding up of .5 values to next whole number
-  // as some vehicles report fractional values.  Abrp seems to only support integer values
   read_num = Number(OvmsMetrics.Value("v.b.soc")); 
   if (myJSON.soc != read_num) {        
     myJSON.soc = read_num;
@@ -155,14 +155,14 @@ function UpdateTelemetryObj(myJSON) {
   //above code line works, except when value is undefined, after reboot
 
   read_num = OvmsMetrics.AsFloat("v.p.latitude");
-  read_num = read_num.toFixed(3);
+  read_num = read_num.toFixed(5);
   if (myJSON.lat != read_num) {
     myJSON.lat = read_num;
     sHasChanged += "_LAT:" + myJSON.lat + "°";
   }
 
   read_num = Number(OvmsMetrics.AsFloat("v.p.longitude"));
-  read_num = read_num.toFixed(3);
+  read_num = read_num.toFixed(5);
   if (myJSON.lon != read_num) {
     myJSON.lon = read_num;
     sHasChanged += "_LON:" + myJSON.lon + "°";
@@ -170,9 +170,9 @@ function UpdateTelemetryObj(myJSON) {
 
   read_num = Number(OvmsMetrics.AsFloat("v.p.altitude"));
   read_num = read_num.toFixed(1);
-  if (read_num <= (myJSON.alt - 2) || read_num >= (myJSON.alt + 2)) {
-    myJSON.alt = read_num;
-    sHasChanged += "_ALT:" + myJSON.alt + "m";
+  if (read_num <= (myJSON.elevation - 2) || read_num >= (myJSON.elevation + 2)) {
+    myJSON.elevation = read_num;
+    sHasChanged += "_ALT:" + myJSON.elevation + "m";
   }
 
   read_num = Number(OvmsMetrics.Value("v.b.power"));
@@ -200,15 +200,16 @@ function UpdateTelemetryObj(myJSON) {
   } else {
     myJSON.is_charging = 0;
   }
-
-
+  if (sHasChanged !== "") {
+    print(sHasChanged + CR);
+  }
   return (sHasChanged !== "");
 }
 
 // Show available vehicle data
 function DisplayLiveData(myJSON) {
   var newcontent = "";
-  newcontent += "altitude = " + myJSON.alt       + "m"  + CR;    //GPS altitude
+  newcontent += "altitude = " + myJSON.elevation       + "m"  + CR;    //GPS altitude
   newcontent += "latitude = " + myJSON.lat       + "°"  + CR;    //GPS latitude
   newcontent += "longitude= " + myJSON.lon       + "°"  + CR;    //GPS longitude
   newcontent += "ext temp = " + myJSON.ext_temp  + "°C" + CR;    //Ambient temperature
@@ -240,7 +241,7 @@ function CloseTelemetry() {
 
 // http request callback if successful
 function OnRequestDone(resp) {
-  print("response="+JSON.stringify(resp)+CR);
+  print("response=" + resp.statusCode + ":" + resp.statusText + CR);
   //OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + sHasChanged);
 }
 
@@ -259,7 +260,7 @@ function GetUrlABRP() {
   urljson += "token=" + abrp_cfg.user_token;
   urljson += "&";
   urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  print(urljson + CR);
+  // print(urljson + CR);
   return urljson;
 }
 
@@ -273,9 +274,28 @@ function GetURLcfg() {
   return cfg;
 }
 
+var last_send = 0.0;
 function SendLiveData() {
-  if (UpdateTelemetry()) {
+  // Check if telemetry updated.
+  var bChanged = UpdateTelemetry()
+  var elapsed = Math.trunc(Date.now()/1000) - last_send;
+  var should_send = false;
+  if (bChanged) {
+    should_send = true;
+    print("Sending: Telemetry changed." + CR);
+  } else if (elapsed >= 1500) {
+    // Send the data if last send was more than 25 minutes ago.
+    should_send = true;
+    print("Sending: 25 minutes passed." + CR);
+  } else if (elapsed >= 25.0 && (objTLM.is_charging || Math.abs(objTLM.speed) >= 5.0)) {
+    // Send every 25 seconds at least if active.  This keeps the live data marked 'live'
+    // in ABRP
+    should_send = true;
+    print("Sending: Charging / driving and 25 seconds passed." + CR);
+  }
+  if (should_send) {
     HTTP.Request( GetURLcfg() );
+    last_send =  Math.trunc(Date.now()/1000);
   }
 }
 
