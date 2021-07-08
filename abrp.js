@@ -116,6 +116,15 @@ function InitTelemetryObj() {
   };
 }
 
+function SetIfChanged(new_val, old_val, name) {
+  if (new_val != old_val) {
+    sHasChanged += " " + name + ": " + new_val + ", ";
+    return new_val;
+  } else {
+    return old_val;
+  } 
+}
+
 // Fill json telemetry object
 function UpdateTelemetryObj(myJSON) {
   if(!myJSON){
@@ -133,17 +142,8 @@ function UpdateTelemetryObj(myJSON) {
     bMotorsOn = false;
   }
 
-  read_num = Number(OvmsMetrics.Value("v.b.soc")); 
-  if (myJSON.soc != read_num) {        
-    myJSON.soc = read_num;
-    sHasChanged += "_SOC:" + myJSON.soc + "%";
-  }
-
-  read_num = Number(OvmsMetrics.Value("v.b.soh"));
-  if (myJSON.soh != read_num) {
-    myJSON.soh = read_num;
-    sHasChanged += "_SOH:" + myJSON.soh + "%";
-  }
+  myJSON.soh = SetIfChanged(Number(OvmsMetrics.Value("v.b.soh")), myJSON.soh, 'soh');
+  myJSON.soc = SetIfChanged(Number(OvmsMetrics.Value("v.b.soc")), myJSON.soc, 'soc');
 
   if ( (myJSON.soh + myJSON.soc) == 0 ) {
     // Sometimes the canbus is not readable, and abrp doesn't like 0 values
@@ -155,34 +155,20 @@ function UpdateTelemetryObj(myJSON) {
   //above code line works, except when value is undefined, after reboot
 
   read_num = OvmsMetrics.AsFloat("v.p.latitude");
-  read_num = read_num.toFixed(5);
-  if (myJSON.lat != read_num) {
-    myJSON.lat = read_num;
-    sHasChanged += "_LAT:" + myJSON.lat + "°";
-  }
-
+  myJSON.lat = SetIfChanged(read_num.toFixed(5), myJSON.lat, 'lat');
   read_num = Number(OvmsMetrics.AsFloat("v.p.longitude"));
-  read_num = read_num.toFixed(5);
-  if (myJSON.lon != read_num) {
-    myJSON.lon = read_num;
-    sHasChanged += "_LON:" + myJSON.lon + "°";
-  }
-
+  myJSON.lon = SetIfChanged(read_num.toFixed(5), myJSON.lon, 'lon');
   read_num = Number(OvmsMetrics.AsFloat("v.p.altitude"));
-  read_num = read_num.toFixed(1);
-  if (read_num <= (myJSON.elevation - 2) || read_num >= (myJSON.elevation + 2)) {
-    myJSON.elevation = read_num;
-    sHasChanged += "_ALT:" + myJSON.elevation + "m";
-  }
-
+  myJSON.elevation = SetIfChanged(read_num.toFixed(1), myJSON.elevation, 'elevation');
+  
   read_num = Number(OvmsMetrics.Value("v.b.power"));
-  myJSON.power = read_num.toFixed(1);
+  myJSON.power = SetIfChanged(read_num.toFixed(3), myJSON.power, 'power');
 
-  myJSON.speed=Number(OvmsMetrics.Value("v.p.speed"));
-  myJSON.batt_temp=Number(OvmsMetrics.Value("v.b.temp"));
-  myJSON.ext_temp=Number(OvmsMetrics.Value("v.e.temp"));
-  myJSON.voltage=Number(OvmsMetrics.Value("v.b.voltage"));
-  myJSON.current=Number(OvmsMetrics.Value("v.b.current"));
+  myJSON.speed = SetIfChanged(Number(OvmsMetrics.Value("v.p.speed")), myJSON.speed, 'speed');
+  myJSON.batt_temp = SetIfChanged(Number(OvmsMetrics.Value("v.b.temp")), myJSON.batt_temp, 'batt_temp');
+  myJSON.ext_temp = SetIfChanged(Number(OvmsMetrics.Value("v.e.temp")), myJSON.ext_temp, 'ext_temp');
+  myJSON.voltage = SetIfChanged(Number(OvmsMetrics.Value("v.b.voltage")), myJSON.voltage, 'voltage');
+  myJSON.current = SetIfChanged(Number(OvmsMetrics.Value("v.b.current")), myJSON.current, 'current');
 
   myJSON.utc = Math.trunc(Date.now()/1000);
   //myJSON.utc = OvmsMetrics.Value("m.time.utc");
@@ -190,16 +176,14 @@ function UpdateTelemetryObj(myJSON) {
   // read_bool = Boolean(OvmsMetrics.Value("v.c.charging"));
   // v.c.charging is also on when regen => not wanted here
   read_str = OvmsMetrics.Value("v.c.state");
-  if ( (read_str == "charging") || (read_str == "topoff") ) {
-    myJSON.is_charging = 1;
-    read_str = OvmsMetrics.Value("v.c.mode");
-    if (sHasChanged != "") {
-      sHasChanged += "_CHRG:" + read_str + "(" + OvmsMetrics.Value("v.c.charging") + ")";
-      print("Charging in mode " + read_str + CR);
-    }
+  if ((read_str == "charging") || (read_str == "topoff")) {
+    read_num = 1;
+    print("Charging with mode = " + OvmsMetrics.Value("v.c.mode") + CR);
   } else {
-    myJSON.is_charging = 0;
+    read_num = 0;
   }
+  myJSON.is_charging = SetIfChanged(read_num, myJSON.is_charging, 'is_charging');
+  
   if (sHasChanged !== "") {
     print(sHasChanged + CR);
   }
