@@ -116,9 +116,11 @@ function InitTelemetryObj() {
   };
 }
 
-function SetIfChanged(new_val, old_val, name) {
-  if (new_val != old_val) {
+function SetIfChanged(new_val, old_val, name, tolerance) {
+  if (Math.abs(new_val - old_val) > tolerance) {
     sHasChanged += " " + name + ": " + new_val + ", ";
+    return new_val;
+  } else if (new_val != old_val) {
     return new_val;
   } else {
     return old_val;
@@ -142,8 +144,8 @@ function UpdateTelemetryObj(myJSON) {
     bMotorsOn = false;
   }
 
-  myJSON.soh = SetIfChanged(Number(OvmsMetrics.Value("v.b.soh")), myJSON.soh, 'soh');
-  myJSON.soc = SetIfChanged(Number(OvmsMetrics.Value("v.b.soc")), myJSON.soc, 'soc');
+  myJSON.soh = SetIfChanged(Number(OvmsMetrics.Value("v.b.soh")), myJSON.soh, 'soh', 0);
+  myJSON.soc = SetIfChanged(Number(OvmsMetrics.Value("v.b.soc")), myJSON.soc, 'soc', 0);
 
   if ( (myJSON.soh + myJSON.soc) == 0 ) {
     // Sometimes the canbus is not readable, and abrp doesn't like 0 values
@@ -155,20 +157,20 @@ function UpdateTelemetryObj(myJSON) {
   //above code line works, except when value is undefined, after reboot
 
   read_num = OvmsMetrics.AsFloat("v.p.latitude");
-  myJSON.lat = SetIfChanged(read_num.toFixed(5), myJSON.lat, 'lat');
+  myJSON.lat = SetIfChanged(read_num.toFixed(4), myJSON.lat, 'lat', 0.05);
   read_num = Number(OvmsMetrics.AsFloat("v.p.longitude"));
-  myJSON.lon = SetIfChanged(read_num.toFixed(5), myJSON.lon, 'lon');
+  myJSON.lon = SetIfChanged(read_num.toFixed(4), myJSON.lon, 'lon', 0.05);
   read_num = Number(OvmsMetrics.AsFloat("v.p.altitude"));
-  myJSON.elevation = SetIfChanged(read_num.toFixed(1), myJSON.elevation, 'elevation');
+  myJSON.elevation = SetIfChanged(read_num.toFixed(1), myJSON.elevation, 'elevation', 2);
   
   read_num = Number(OvmsMetrics.Value("v.b.power"));
-  myJSON.power = SetIfChanged(read_num.toFixed(3), myJSON.power, 'power');
+  myJSON.power = SetIfChanged(read_num.toFixed(3), myJSON.power, 'power', 0);
 
-  myJSON.speed = SetIfChanged(Number(OvmsMetrics.Value("v.p.speed")), myJSON.speed, 'speed');
-  myJSON.batt_temp = SetIfChanged(Number(OvmsMetrics.Value("v.b.temp")), myJSON.batt_temp, 'batt_temp');
-  myJSON.ext_temp = SetIfChanged(Number(OvmsMetrics.Value("v.e.temp")), myJSON.ext_temp, 'ext_temp');
-  myJSON.voltage = SetIfChanged(Number(OvmsMetrics.Value("v.b.voltage")), myJSON.voltage, 'voltage');
-  myJSON.current = SetIfChanged(Number(OvmsMetrics.Value("v.b.current")), myJSON.current, 'current');
+  myJSON.speed = SetIfChanged(Number(OvmsMetrics.Value("v.p.speed")), myJSON.speed, 'speed', 0);
+  myJSON.batt_temp = SetIfChanged(Number(OvmsMetrics.Value("v.b.temp")), myJSON.batt_temp, 'batt_temp', 0);
+  myJSON.ext_temp = SetIfChanged(Number(OvmsMetrics.Value("v.e.temp")), myJSON.ext_temp, 'ext_temp', 0);
+  myJSON.voltage = SetIfChanged(Number(OvmsMetrics.Value("v.b.voltage")), myJSON.voltage, 'voltage', 0);
+  myJSON.current = SetIfChanged(Number(OvmsMetrics.Value("v.b.current")), myJSON.current, 'current', 0);
 
   myJSON.utc = Math.trunc(Date.now()/1000);
   //myJSON.utc = OvmsMetrics.Value("m.time.utc");
@@ -182,7 +184,7 @@ function UpdateTelemetryObj(myJSON) {
   } else {
     read_num = 0;
   }
-  myJSON.is_charging = SetIfChanged(read_num, myJSON.is_charging, 'is_charging');
+  myJSON.is_charging = SetIfChanged(read_num, myJSON.is_charging, 'is_charging', 0);
   
   if (sHasChanged !== "") {
     print(sHasChanged + CR);
