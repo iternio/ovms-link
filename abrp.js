@@ -234,7 +234,7 @@ function OnRequestDone(resp) {
 // http request callback if failed
 function OnRequestFail(error) {
   print("error="+JSON.stringify(error)+CR);
-  OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + JSON.stringify(error));
+  // OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + JSON.stringify(error));
 }
 
 // Return full url with JSON telemetry object
