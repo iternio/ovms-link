@@ -12,8 +12,8 @@
  *  - install at above path
  *  - config set usr abrp.user_token "your-token-goes-here"
  *  - add to /store/scripts/ovmsmain.js:
- *                  abrp = require("abrp");
- *                  abrp.send(1)
+ *                  abrp = require("sendlivedata2abrp");
+ *                  abrp.send(1);
  *  - script reload
  *
  * Usage:
