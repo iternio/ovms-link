@@ -275,7 +275,7 @@ function SendLiveData() {
   var bChanged = UpdateTelemetry()
   var elapsed = Math.trunc(Date.now()/1000) - last_send;
   var should_send = false;
-  if (bChanged && minHasChanged) {
+  if (bChanged) {
     should_send = true;
     print("Sending: Telemetry changed." + CR);
   } else if (elapsed >= 1500) {
