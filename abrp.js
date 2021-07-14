@@ -117,8 +117,17 @@ function InitTelemetryObj() {
 }
 
 function SetIfChanged(new_val, old_val, name, tolerance) {
+  if (old_val !== null && new_val === null) {
+    return old_val; // Sometimes we get nulls, 
+  }
+  new_val = Number(new_val);
+  if (isNaN(new_val)) {
+    return old_val; // Maybe sometimes we get NaNs?
+  }
   if (Math.abs(new_val - old_val) > tolerance) {
-    sHasChanged += " " + name + ": " + new_val + ", ";
+    if (['power','soc','speed','lat','lon'].indexOf(name) >= 0) {
+      sHasChanged += " " + name + ": " + new_val + ", ";
+    }
     return new_val;
   } else if (new_val != old_val) {
     return new_val;
@@ -266,7 +275,7 @@ function SendLiveData() {
   var bChanged = UpdateTelemetry()
   var elapsed = Math.trunc(Date.now()/1000) - last_send;
   var should_send = false;
-  if (bChanged) {
+  if (bChanged && minHasChanged) {
     should_send = true;
     print("Sending: Telemetry changed." + CR);
   } else if (elapsed >= 1500) {
