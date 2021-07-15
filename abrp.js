@@ -224,8 +224,10 @@ function InitTelemetry() {
 }
 
 function UpdateTelemetry() {
+  if(!objTLM){
+    InitTelemetry() // If the telemetry object doesn't exist, create it.
+  }
   var bChanged = UpdateTelemetryObj(objTLM);
-  if (bChanged) { DisplayLiveData(objTLM); }
   return bChanged;
 }
 
