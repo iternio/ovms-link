@@ -122,7 +122,7 @@ function InitTelemetryObj() {
 }
 
 function SetIfChanged(new_val, old_val, name, tolerance) {
-  if (old_val !== null && new_val === null) {
+  if (old_val !== null && (new_val === null || new_val === undefined)) {
     return old_val; // Sometimes we get nulls, 
   }
   new_val = Number(new_val);
