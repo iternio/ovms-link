@@ -1,5 +1,5 @@
 /**
- *       /store/scripts/sendlivedata2abrp.js
+ *       /store/scripts/abrp.js
  *
  * Module plugin:
  *  Send live data to a better route planner
@@ -7,7 +7,7 @@
  *  /!\ requires OVMS firmware version 3.2.008-147 minimum (for HTTP call)
  *
  * Version 1.3   2020   inf0mike (forum https://www.openvehicles.com)
- *
+ * Version 1.4   2021   Jason_ABRP 
  * Enable:
  *  - install at above path
  *  - config set usr abrp.user_token "your-token-goes-here"
@@ -23,6 +23,11 @@
  *  -                      (0)        => stop sending data
  *  - script eval abrp.resetConfig()  => reset configuration to defaults
  *
+ *  Version 1.4 updates:
+ *  - Update script so it can be running continuously
+ *  - Remove unneeded dependencies on multiple config items (Now only have to set token)
+ *  - Stability improvements
+ * 
  * Version 1.3 updates:
  *  - Fix for rounding of fractional SOC causing abrp to report SOC off by 1
  *  - Fix for altitude never being sent
@@ -202,19 +207,19 @@ function UpdateTelemetryObj(myJSON) {
 }
 
 // Show available vehicle data
-function DisplayLiveData(myJSON) {
+function DisplayLiveData() {
   var newcontent = "";
-  newcontent += "altitude = " + myJSON.elevation       + "m"  + CR;    //GPS altitude
-  newcontent += "latitude = " + myJSON.lat       + "°"  + CR;    //GPS latitude
-  newcontent += "longitude= " + myJSON.lon       + "°"  + CR;    //GPS longitude
-  newcontent += "ext temp = " + myJSON.ext_temp  + "°C" + CR;    //Ambient temperature
-  newcontent += "charge   = " + myJSON.soc       + "%"  + CR;    //State of charge
-  newcontent += "health   = " + myJSON.soh       + "%"  + CR;    //State of health
-  newcontent += "bat temp = " + myJSON.batt_temp + "°C" + CR;    //Main battery momentary temperature
-  newcontent += "voltage  = " + myJSON.voltage   + "V"  + CR;    //Main battery momentary voltage
-  newcontent += "current  = " + myJSON.current   + "A"  + CR;    //Main battery momentary current
-  newcontent += "power    = " + myJSON.power     + "kW" + CR;    //Main battery momentary power
-  newcontent += "charging = " + myJSON.is_charging + CR;         //yes = currently charging
+  newcontent += "altitude = " + objTLM.elevation       + "m"  + CR;    //GPS altitude
+  newcontent += "latitude = " + objTLM.lat       + "°"  + CR;    //GPS latitude
+  newcontent += "longitude= " + objTLM.lon       + "°"  + CR;    //GPS longitude
+  newcontent += "ext temp = " + objTLM.ext_temp  + "°C" + CR;    //Ambient temperature
+  newcontent += "charge   = " + objTLM.soc       + "%"  + CR;    //State of charge
+  newcontent += "health   = " + objTLM.soh       + "%"  + CR;    //State of health
+  newcontent += "bat temp = " + objTLM.batt_temp + "°C" + CR;    //Main battery momentary temperature
+  newcontent += "voltage  = " + objTLM.voltage   + "V"  + CR;    //Main battery momentary voltage
+  newcontent += "current  = " + objTLM.current   + "A"  + CR;    //Main battery momentary current
+  newcontent += "power    = " + objTLM.power     + "kW" + CR;    //Main battery momentary power
+  newcontent += "charging = " + objTLM.is_charging + CR;         //yes = currently charging
   print(newcontent);
 }
 
@@ -257,7 +262,7 @@ function GetUrlABRP() {
   urljson += "token=" + abrp_cfg.user_token;
   urljson += "&";
   urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  // print(urljson + CR);
+  print(JSON.stringify(objTLM) + CR);
   return urljson;
 }
 
@@ -272,6 +277,7 @@ function GetURLcfg() {
 }
 
 var last_send = 0.0;
+var last_data = {};
 function SendLiveData() {
   // Check if telemetry updated.
   var bChanged = UpdateTelemetry()
@@ -291,8 +297,34 @@ function SendLiveData() {
     print("Sending: Charging / driving and 25 seconds passed." + CR);
   }
   if (should_send) {
+    zeroStaleData();
     HTTP.Request( GetURLcfg() );
     last_send =  Math.trunc(Date.now()/1000);
+    last_data = {
+      'power': objTLM.power,
+      'current': objTLM.current,
+      'is_charging': objTLM.is_charging,
+      'speed': objTLM.speed,
+    }
+  }
+}
+
+function zeroStaleData() {
+  const elapsed = Math.trunc(Date.now()/1000) - last_send;
+  if (elapsed >= 300) {
+    // If any of these values are the same as they were 5 or more minutes ago, consider them stale and set them zero.
+    if (last_data.power == objTLM.power) {
+      objTLM.power = 0;
+    }
+    if (last_data.current == objTLM.current) {
+      objTLM.current = 0;
+    }
+    if (last_data.is_charging == objTLM.is_charging) {
+      objTLM.is_charging = 0;
+    }
+    if (last_data.speed == objTLM.speed || objTLM.speed < 0.5) {
+      objTLM.speed = 0;
+    }
   }
 }
 
@@ -328,6 +360,7 @@ exports.info = function() {
   readConfig();
   InitTelemetry();
   UpdateTelemetry();
+  DisplayLiveData();
   CloseTelemetry();
 }
 
