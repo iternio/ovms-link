@@ -57,15 +57,13 @@
  */
 
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
-const MY_TOKEN = "@@@@@@@@-@@@@-@@@@-@@@@-@@@@@@@@@@@@";
 const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
 const DEBUG = true
 
 const DEFAULT_CFG = {
-  url: URL,
-  user_token: MY_TOKEN,
+  url: URL
 };
 
 function logger() {
@@ -111,24 +109,13 @@ var bMotorsOn = false;
 // initialise from default
 var abrp_cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
 
-// check if json object is empty
-function isJsonEmpty(obj) {
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) return false;
-  }
-  return true;
-}
-
 // Read & process config:
 function readConfig() {
-  // check if config exist
   var read_cfg = OvmsConfig.GetValues("usr", "abrp.");
-  console.debug('OVMS configuration', read_cfg);
-  if (isJsonEmpty(read_cfg) == true) {
-    // no config yet, set the default values
-    OvmsConfig.SetValues("usr", "abrp.", abrp_cfg);
+  console.debug('usr.abrp config', read_cfg);
+  if (!read_cfg.user_token) {
+    OvmsNotify.Raise("error", "usr.abrp.status", "ABRP::user_token config not set");
   } else {
-    // config existing
     abrp_cfg.user_token = read_cfg.user_token;
   }
 }
