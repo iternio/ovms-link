@@ -436,8 +436,8 @@ exports.info = function () {
 //   Resets stored config to default
 exports.resetConfig = function () {
   OvmsConfig.SetValues("usr", "abrp.", DEFAULT_CFG);
-  console.debug('ABRP configuration', abrp_cfg);
-  OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::config changed");
+  console.debug('usr.abrp configuration', abrp_cfg);
+  OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::config reset");
 };
 
 // API method abrp.send():
