@@ -61,13 +61,47 @@ const MY_TOKEN = "@@@@@@@@-@@@@-@@@@-@@@@-@@@@@@@@@@@@";
 const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
+const DEBUG = true
 
 const DEFAULT_CFG = {
   url: URL,
   user_token: MY_TOKEN,
 };
 
-const CR = "\n";
+function logger() {
+  function log(message, obj) {
+    print(message);
+    if (obj) {
+      print(" " + JSON.stringify(obj));
+    }
+    print("\n");
+  }
+
+  function debug(message, obj) {
+    if (DEBUG) {
+      log('DEBUG: ' + message, obj)
+    }
+  }
+
+  function error(message, obj) {
+    log('ERROR: ' + message, obj)
+  }
+
+  function warn(message, obj) {
+    log('WARN: ' + message, obj)
+  }
+
+  return {
+    debug,
+    error,
+    info: log,
+    log,
+    warn
+  }
+}
+
+// simple console shim
+const console = logger()
 
 var objTLM;
 var objTimer, objEvent;
@@ -89,7 +123,7 @@ function isJsonEmpty(obj) {
 function readConfig() {
   // check if config exist
   var read_cfg = OvmsConfig.GetValues("usr", "abrp.");
-  print(JSON.stringify(read_cfg) + CR);
+  console.debug('OVMS configuration', read_cfg);
   if (isJsonEmpty(read_cfg) == true) {
     // no config yet, set the default values
     OvmsConfig.SetValues("usr", "abrp.", abrp_cfg);
@@ -170,7 +204,7 @@ function UpdateTelemetryObj(myJSON) {
 
   if (myJSON.soh + myJSON.soc == 0) {
     // Sometimes the canbus is not readable, and abrp doesn't like 0 values
-    print("canbus not readable: reset module and then put motors on" + CR);
+    console.error("canbus not readable: reset module and then put motors on");
     return false;
   }
 
@@ -231,7 +265,7 @@ function UpdateTelemetryObj(myJSON) {
   read_str = OvmsMetrics.Value("v.c.state");
   if (read_str == "charging" || read_str == "topoff") {
     read_num = 1;
-    print("Charging with mode = " + OvmsMetrics.Value("v.c.mode") + CR);
+    console.debug("Charging with mode = " + OvmsMetrics.Value("v.c.mode"));
   } else {
     read_num = 0;
   }
@@ -243,26 +277,24 @@ function UpdateTelemetryObj(myJSON) {
   );
 
   if (sHasChanged !== "") {
-    print(sHasChanged + CR);
+    console.debug(sHasChanged);
   }
   return sHasChanged !== "";
 }
 
 // Show available vehicle data
 function DisplayLiveData() {
-  var newcontent = "";
-  newcontent += "altitude = " + objTLM.elevation + "m" + CR; //GPS altitude
-  newcontent += "latitude = " + objTLM.lat + "°" + CR; //GPS latitude
-  newcontent += "longitude= " + objTLM.lon + "°" + CR; //GPS longitude
-  newcontent += "ext temp = " + objTLM.ext_temp + "°C" + CR; //Ambient temperature
-  newcontent += "charge   = " + objTLM.soc + "%" + CR; //State of charge
-  newcontent += "health   = " + objTLM.soh + "%" + CR; //State of health
-  newcontent += "bat temp = " + objTLM.batt_temp + "°C" + CR; //Main battery momentary temperature
-  newcontent += "voltage  = " + objTLM.voltage + "V" + CR; //Main battery momentary voltage
-  newcontent += "current  = " + objTLM.current + "A" + CR; //Main battery momentary current
-  newcontent += "power    = " + objTLM.power + "kW" + CR; //Main battery momentary power
-  newcontent += "charging = " + objTLM.is_charging + CR; //yes = currently charging
-  print(newcontent);
+  console.log("altitude = " + objTLM.elevation + "m"); //GPS altitude
+  console.log("latitude = " + objTLM.lat + "°"); //GPS latitude
+  console.log("longitude= " + objTLM.lon + "°"); //GPS longitude
+  console.log("ext temp = " + objTLM.ext_temp + "°C"); //Ambient temperature
+  console.log("charge   = " + objTLM.soc + "%"); //State of charge
+  console.log("health   = " + objTLM.soh + "%"); //State of health
+  console.log("bat temp = " + objTLM.batt_temp + "°C"); //Main battery momentary temperature
+  console.log("voltage  = " + objTLM.voltage + "V"); //Main battery momentary voltage
+  console.log("current  = " + objTLM.current + "A"); //Main battery momentary current
+  console.log("power    = " + objTLM.power + "kW"); //Main battery momentary power
+  console.log("charging = " + objTLM.is_charging); //yes = currently charging
 }
 
 function InitTelemetry() {
@@ -285,13 +317,13 @@ function CloseTelemetry() {
 
 // http request callback if successful
 function OnRequestDone(resp) {
-  print("response=" + resp.statusCode + ":" + resp.statusText + CR);
+  console.debug("response=" + resp.statusCode + ":" + resp.statusText);
   //OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + sHasChanged);
 }
 
 // http request callback if failed
 function OnRequestFail(error) {
-  print("error=" + JSON.stringify(error) + CR);
+  console.error("Error communicating with ABRP", error);
   // OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + JSON.stringify(error));
 }
 
@@ -304,7 +336,7 @@ function GetUrlABRP() {
   urljson += "token=" + abrp_cfg.user_token;
   urljson += "&";
   urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  print(JSON.stringify(objTLM) + CR);
+  console.debug('ABRP URL', objTLM);
   return urljson;
 }
 
@@ -331,11 +363,11 @@ function SendLiveData() {
   var should_send = false;
   if (bChanged) {
     should_send = true;
-    print("Sending: Telemetry changed." + CR);
+    console.info("Sending: Telemetry changed.");
   } else if (elapsed >= 1500) {
     // Send the data if last send was more than 25 minutes ago.
     should_send = true;
-    print("Sending: 25 minutes passed." + CR);
+    console.info("Sending: 25 minutes passed.");
   } else if (
     elapsed >= 25.0 &&
     (objTLM.is_charging || Math.abs(objTLM.speed) >= 5.0)
@@ -343,7 +375,7 @@ function SendLiveData() {
     // Send every 25 seconds at least if active.  This keeps the live data marked 'live'
     // in ABRP
     should_send = true;
-    print("Sending: Charging / driving and 25 seconds passed." + CR);
+    console.info("Sending: Charging / driving and 25 seconds passed.");
   }
   if (should_send) {
     zeroStaleData();
@@ -417,7 +449,7 @@ exports.info = function () {
 //   Resets stored config to default
 exports.resetConfig = function () {
   OvmsConfig.SetValues("usr", "abrp.", DEFAULT_CFG);
-  print(JSON.stringify(abrp_cfg));
+  console.debug('ABRP configuration', abrp_cfg);
   OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::config changed");
 };
 
@@ -427,20 +459,20 @@ exports.send = function (onoff) {
   if (onoff) {
     readConfig();
     if (objTimer != null) {
-      print("Already running !" + CR);
+      console.warn("Already running !");
       return;
     }
-    print("Start sending data..." + CR);
+    console.info("Start sending data...");
     InitTelemetry();
     SendLiveData();
     InitTimer();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::started");
   } else {
     if (objTimer == null) {
-      print("Already stopped !" + CR);
+      console.warn("Already stopped !");
       return;
     }
-    print("Stop sending data" + CR);
+    console.info("Stop sending data");
     CloseTimer();
     CloseTelemetry();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::stopped");
