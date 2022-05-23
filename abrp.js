@@ -60,10 +60,9 @@ const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
 const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
-const DEBUG = true
 
 const DEFAULT_CFG = {
-  url: URL
+  url: URL,
 };
 
 function logger() {
@@ -73,16 +72,16 @@ function logger() {
 
   function debug(message, obj) {
     if (DEBUG) {
-      log('DEBUG: ' + message, obj)
+      log("DEBUG: " + message, obj);
     }
   }
 
   function error(message, obj) {
-    log('ERROR: ' + message, obj)
+    log("ERROR: " + message, obj);
   }
 
   function warn(message, obj) {
-    log('WARN: ' + message, obj)
+    log("WARN: " + message, obj);
   }
 
   return {
@@ -90,13 +89,14 @@ function logger() {
     error,
     info: log,
     log,
-    warn
-  }
+    warn,
+  };
 }
 
 // simple console shim
-const console = logger()
+const console = logger();
 
+var DEBUG = true;
 var objTLM;
 var objTimer, objEvent;
 var sHasChanged = "";
@@ -108,9 +108,13 @@ var abrp_cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
 // Read & process config:
 function readConfig() {
   var read_cfg = OvmsConfig.GetValues("usr", "abrp.");
-  console.debug('usr.abrp config', read_cfg);
+  console.debug("usr abrp. config", read_cfg);
   if (!read_cfg.user_token) {
-    OvmsNotify.Raise("error", "usr.abrp.status", "ABRP::user_token config not set");
+    OvmsNotify.Raise(
+      "error",
+      "usr.abrp.status",
+      "ABRP::config usr abrp.user_token not set"
+    );
   } else {
     abrp_cfg.user_token = read_cfg.user_token;
   }
@@ -318,7 +322,7 @@ function GetUrlABRP() {
   urljson += "token=" + abrp_cfg.user_token;
   urljson += "&";
   urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  console.debug('ABRP URL', objTLM);
+  console.debug("ABRP URL", objTLM);
   return urljson;
 }
 
@@ -426,8 +430,8 @@ exports.info = function () {
 //   Resets stored config to default
 exports.resetConfig = function () {
   OvmsConfig.SetValues("usr", "abrp.", DEFAULT_CFG);
-  console.debug('usr.abrp configuration', abrp_cfg);
-  OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::config reset");
+  console.debug("usr abrp. config", abrp_cfg);
+  OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::usr abrp. config reset");
 };
 
 // API method abrp.send():
