@@ -167,7 +167,6 @@ function UpdateTelemetryObj(myJSON) {
   }
   var read_num = 0;
   var read_str = "";
-  var read_bool = false;
 
   sHasChanged = "";
 
@@ -394,11 +393,6 @@ function zeroStaleData() {
       objTLM.speed = 0;
     }
   }
-}
-
-function Reactivate_MotorsOn() {
-  bMotorsOn = true;
-  SendLiveData();
 }
 
 function InitTimer() {
