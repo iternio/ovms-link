@@ -161,6 +161,7 @@ function SetIfChanged(new_val, old_val, name, tolerance) {
 
 // Fill json telemetry object
 function UpdateTelemetryObj(myJSON) {
+  const started = performance.now();
   if (!myJSON) {
     // if the data object is undefined or null then return early
     return false;
@@ -265,6 +266,8 @@ function UpdateTelemetryObj(myJSON) {
   if (sHasChanged !== "") {
     console.debug(sHasChanged);
   }
+  const duration = performance.now() - started;
+  console.debug("Getting OvmsMetrics took " + duration + "ms");
   return sHasChanged !== "";
 }
 
