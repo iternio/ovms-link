@@ -68,11 +68,7 @@ const DEFAULT_CFG = {
 
 function logger() {
   function log(message, obj) {
-    print(message);
-    if (obj) {
-      print(" " + JSON.stringify(obj));
-    }
-    print("\n");
+    print(message + (obj ? " " + JSON.stringify(obj) : "") + "\n");
   }
 
   function debug(message, obj) {
