@@ -419,11 +419,13 @@ exports.onetime = function () {
 // API method abrp.info():
 //   Do not send any data, just read vehicle data and writes in the console
 exports.info = function () {
+  DEBUG = false
   readConfig();
   InitTelemetry();
   UpdateTelemetry();
   DisplayLiveData();
   CloseTelemetry();
+  DEBUG = true
 };
 
 // API method abrp.resetConfig()
