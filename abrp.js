@@ -80,6 +80,10 @@ function logger() {
     log("ERROR: " + message, obj);
   }
 
+  function info(message, obj) {
+    log("INFO: " + message, obj);
+  }
+
   function warn(message, obj) {
     log("WARN: " + message, obj);
   }
@@ -87,10 +91,17 @@ function logger() {
   return {
     debug,
     error,
-    info: log,
+    info,
     log,
     warn,
   };
+}
+
+function round(number, precision) {
+  if (!number) {
+    return number; // could be 0, null or undefined
+  }
+  return Number(number.toFixed(precision || 0));
 }
 
 // simple console shim
@@ -157,6 +168,65 @@ function SetIfChanged(new_val, old_val, name, tolerance) {
   } else {
     return old_val;
   }
+}
+
+function getOvmsMetrics() {
+  const metricNames = [
+    "v.b.current",
+    "v.b.power",
+    "v.b.range.ideal",
+    "v.b.soc",
+    "v.b.soh",
+    "v.b.temp",
+    "v.b.voltage",
+    "v.c.kwh",
+    "v.c.mode",
+    "v.c.state", // v.c.charging is also true when regenerating, which isn't what is wanted
+    "v.e.parktime",
+    "v.e.temp",
+    "v.p.altitude",
+    "v.p.direction",
+    "v.p.latitude",
+    "v.p.longitude",
+    "v.p.odometer",
+    "v.p.speed",
+  ];
+  const started = performance.now();
+  const metrics = OvmsMetrics.GetValues(metricNames);
+  const duration = performance.now() - started;
+  console.debug("Getting OvmsMetrics took " + round(duration) + "ms", metrics);
+  return metrics;
+}
+
+function mapMetricsToTelemetry(metrics) {
+  const chargingStates = ["charging", "topoff"];
+  const dcfcMode = "performance";
+  // Array.prototype.includes() not supported in duktape
+  const is_charging = chargingStates.indexOf(metrics["v.c.state"]) > -1;
+  // https://documenter.getpostman.com/view/7396339/SWTK5a8w
+  const telemetry = {
+    utc: round(Date.now() / 1000),
+    soc: round(metrics["v.b.soc"]),
+    power: round(metrics["v.b.power"], 1), // ~ nearest 100W of precision
+    speed: round(metrics["v.p.speed"]),
+    lat: round(metrics["v.p.latitude"], 5), // ~1.11 m of precision
+    lon: round(metrics["v.p.longitude"], 5), // ~1.11 m of precision
+    is_charging,
+    is_dcfc: is_charging && dcfcMode === metrics["v.c.mode"],
+    is_parked: metrics["v.e.parktime"] > 0,
+    kwh_charged: is_charging ? round(metrics["v.c.kwh"], 1) : 0,
+    soh: round(metrics["v.b.soh"]),
+    heading: round(metrics["v.p.direction"], 1),
+    elevation: round(metrics["v.p.altitude"], 1),
+    ext_temp: round(metrics["v.e.temp"]),
+    batt_temp: round(metrics["v.b.temp"]),
+    voltage: round(metrics["v.b.voltage"]),
+    current: round(metrics["v.b.current"], 1),
+    odometer: round(metrics["v.p.odometer"]),
+    est_battery_range: round(metrics["v.b.range.ideal"]),
+  };
+  console.debug("Mapped ABRP telemetry", telemetry);
+  return telemetry;
 }
 
 // Fill json telemetry object
@@ -267,23 +337,8 @@ function UpdateTelemetryObj(myJSON) {
     console.debug(sHasChanged);
   }
   const duration = performance.now() - started;
-  console.debug("Getting OvmsMetrics took " + duration + "ms");
+  console.debug("Getting OvmsMetrics took " + round(duration) + "ms");
   return sHasChanged !== "";
-}
-
-// Show available vehicle data
-function DisplayLiveData() {
-  console.log("altitude = " + objTLM.elevation + "m"); //GPS altitude
-  console.log("latitude = " + objTLM.lat + "°"); //GPS latitude
-  console.log("longitude= " + objTLM.lon + "°"); //GPS longitude
-  console.log("ext temp = " + objTLM.ext_temp + "°C"); //Ambient temperature
-  console.log("charge   = " + objTLM.soc + "%"); //State of charge
-  console.log("health   = " + objTLM.soh + "%"); //State of health
-  console.log("bat temp = " + objTLM.batt_temp + "°C"); //Main battery momentary temperature
-  console.log("voltage  = " + objTLM.voltage + "V"); //Main battery momentary voltage
-  console.log("current  = " + objTLM.current + "A"); //Main battery momentary current
-  console.log("power    = " + objTLM.power + "kW"); //Main battery momentary power
-  console.log("charging = " + objTLM.is_charging); //yes = currently charging
 }
 
 function InitTelemetry() {
@@ -422,13 +477,28 @@ exports.onetime = function () {
 // API method abrp.info():
 //   Do not send any data, just read vehicle data and writes in the console
 exports.info = function () {
-  DEBUG = false
-  readConfig();
-  InitTelemetry();
-  UpdateTelemetry();
-  DisplayLiveData();
-  CloseTelemetry();
-  DEBUG = true
+  // DEBUG = false;
+  const metrics = getOvmsMetrics();
+  const telemetry = mapMetricsToTelemetry(metrics);
+  // DEBUG = true;
+  console.log("State of Charge:  " + telemetry.soc + "%");
+  console.log("Battery Power:    " + telemetry.power + "kW");
+  console.log("Vehicle Speed:    " + telemetry.speed + "kph");
+  console.log("GPS Latitude:     " + telemetry.lat + "°");
+  console.log("GPS Longitude:    " + telemetry.lon + "°");
+  console.log("Charging:         " + telemetry.is_charging);
+  console.log("DC Fast Charging: " + telemetry.is_dcfc);
+  console.log("Parked:           " + telemetry.is_parked);
+  console.log("Charged kWh:      " + telemetry.kwh_charged);
+  console.log("State of Health:  " + telemetry.soh + "%");
+  console.log("GPS Heading:      " + telemetry.heading + "°");
+  console.log("GPS Elevation:    " + telemetry.elevation + "m");
+  console.log("External Temp:    " + telemetry.ext_temp + "°C");
+  console.log("Battery Temp:     " + telemetry.batt_temp + "°C");
+  console.log("Battery Voltage:  " + telemetry.voltage + "V");
+  console.log("Battery Current:  " + telemetry.current + "A");
+  console.log("Odometer:         " + telemetry.odometer + "km");
+  console.log("Estimated Range:  " + telemetry.est_battery_range + "km");
 };
 
 // API method abrp.resetConfig()
