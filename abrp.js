@@ -275,7 +275,7 @@ function GetUrlABRP() {
   urljson += "token=" + abrp_cfg.user_token;
   urljson += "&";
   urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  console.debug("ABRP URL", objTLM);
+  console.debug("ABRP URL", urljson);
   return urljson;
 }
 
