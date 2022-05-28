@@ -308,24 +308,25 @@ exports.info = function () {
   const metrics = getOvmsMetrics();
   const telemetry = mapMetricsToTelemetry(metrics);
   // DEBUG = true;
-  console.log("State of Charge:  " + telemetry.soc + "%");
-  console.log("Battery Power:    " + telemetry.power + "kW");
-  console.log("Vehicle Speed:    " + telemetry.speed + "kph");
-  console.log("GPS Latitude:     " + telemetry.lat + "°");
-  console.log("GPS Longitude:    " + telemetry.lon + "°");
+  // space before units as per NIST guidelines https://physics.nist.gov/cuu/Units/checklist.html
+  console.log("State of Charge:  " + telemetry.soc + " %");
+  console.log("Battery Power:    " + telemetry.power + " kW");
+  console.log("Vehicle Speed:    " + telemetry.speed + " kph");
+  console.log("GPS Latitude:     " + telemetry.lat + " °");
+  console.log("GPS Longitude:    " + telemetry.lon + " °");
   console.log("Charging:         " + telemetry.is_charging);
   console.log("DC Fast Charging: " + telemetry.is_dcfc);
   console.log("Parked:           " + telemetry.is_parked);
   console.log("Charged kWh:      " + telemetry.kwh_charged);
-  console.log("State of Health:  " + telemetry.soh + "%");
-  console.log("GPS Heading:      " + telemetry.heading + "°");
-  console.log("GPS Elevation:    " + telemetry.elevation + "m");
-  console.log("External Temp:    " + telemetry.ext_temp + "°C");
-  console.log("Battery Temp:     " + telemetry.batt_temp + "°C");
-  console.log("Battery Voltage:  " + telemetry.voltage + "V");
-  console.log("Battery Current:  " + telemetry.current + "A");
-  console.log("Odometer:         " + telemetry.odometer + "km");
-  console.log("Estimated Range:  " + telemetry.est_battery_range + "km");
+  console.log("State of Health:  " + telemetry.soh + " %");
+  console.log("GPS Heading:      " + telemetry.heading + " °");
+  console.log("GPS Elevation:    " + telemetry.elevation + " m");
+  console.log("External Temp:    " + telemetry.ext_temp + " °C");
+  console.log("Battery Temp:     " + telemetry.batt_temp + " °C");
+  console.log("Battery Voltage:  " + telemetry.voltage + " V");
+  console.log("Battery Current:  " + telemetry.current + " A");
+  console.log("Odometer:         " + telemetry.odometer + " km");
+  console.log("Estimated Range:  " + telemetry.est_battery_range + " km");
 };
 
 // API method abrp.resetConfig()
