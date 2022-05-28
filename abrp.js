@@ -123,7 +123,9 @@ function round(number, precision) {
 const console = logger();
 
 var DEBUG = true;
-var objTLM;
+var objTLM = {
+  utc: 0,
+};
 var objTimer, objEvent;
 
 function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
@@ -144,25 +146,6 @@ function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
   // Otherwise, updates purely based on timing considerations based on the
   // current state of the metrics and when the last telemetry was sent
   return false;
-}
-
-// Make json telemetry object
-function InitTelemetryObj() {
-  return {
-    utc: 0,
-    soc: 0,
-    soh: 0,
-    speed: 0,
-    lat: 0,
-    lon: 0,
-    elevation: 0,
-    ext_temp: 0,
-    is_charging: 0,
-    batt_temp: 0,
-    voltage: 0,
-    current: 0,
-    power: 0,
-  };
 }
 
 function getOvmsMetrics() {
@@ -266,15 +249,7 @@ function validateUsrAbrpConfig() {
     );
     return false
   }
-  return true
-}
-
-function InitTelemetry() {
-  objTLM = InitTelemetryObj();
-}
-
-function CloseTelemetry() {
-  objTLM = null;
+  return true;
 }
 
 function SendLiveData() {
@@ -323,9 +298,7 @@ exports.onetime = function () {
   if (!validateUsrAbrpConfig()) {
     return
   }
-  InitTelemetry();
   SendLiveData();
-  CloseTelemetry();
 };
 
 // API method abrp.info():
@@ -374,7 +347,6 @@ exports.send = function (onoff) {
       return;
     }
     console.info("Start sending data...");
-    InitTelemetry();
     SendLiveData();
     InitTimer();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::started");
@@ -385,7 +357,6 @@ exports.send = function (onoff) {
     }
     console.info("Stop sending data");
     CloseTimer();
-    CloseTelemetry();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::stopped");
   }
 };
