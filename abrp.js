@@ -61,10 +61,6 @@ const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
 const URL = "http://api.iternio.com/1/tlm/send";
 
-const DEFAULT_CFG = {
-  url: URL,
-};
-
 function clone(obj) {
   return Object.assign({}, obj);
 }
@@ -129,24 +125,6 @@ const console = logger();
 var DEBUG = true;
 var objTLM;
 var objTimer, objEvent;
-
-// initialise from default
-var abrp_cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
-
-// Read & process config:
-function readConfig() {
-  var read_cfg = OvmsConfig.GetValues("usr", "abrp.");
-  console.debug("usr abrp. config", read_cfg);
-  if (!read_cfg.user_token) {
-    OvmsNotify.Raise(
-      "error",
-      "usr.abrp.status",
-      "ABRP::config usr abrp.user_token not set"
-    );
-  } else {
-    abrp_cfg.user_token = read_cfg.user_token;
-  }
-}
 
 function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
   // Significant if the SOC changes so that it updates in ABRP as soon as
@@ -278,6 +256,19 @@ function sendTelemetry(telemetry) {
   });
 }
 
+function validateUsrAbrpConfig() {
+  const config = getUsrAbrpConfig();
+  if (!config.user_token) {
+    OvmsNotify.Raise(
+      "error",
+      "usr.abrp.status",
+      "ABRP::config usr abrp.user_token not set"
+    );
+    return false
+  }
+  return true
+}
+
 function InitTelemetry() {
   objTLM = InitTelemetryObj();
 }
@@ -329,7 +320,9 @@ function CloseTimer() {
 // API method abrp.onetime():
 //   Read and send data, but only once, no timer launched
 exports.onetime = function () {
-  readConfig();
+  if (!validateUsrAbrpConfig()) {
+    return
+  }
   InitTelemetry();
   SendLiveData();
   CloseTelemetry();
@@ -365,8 +358,7 @@ exports.info = function () {
 // API method abrp.resetConfig()
 //   Resets stored config to default
 exports.resetConfig = function () {
-  OvmsConfig.SetValues("usr", "abrp.", DEFAULT_CFG);
-  console.debug("usr abrp. config", abrp_cfg);
+  OvmsConfig.SetValues("usr", "abrp.", {});
   OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::usr abrp. config reset");
 };
 
@@ -374,7 +366,9 @@ exports.resetConfig = function () {
 //   Checks every minut if important data has changed, and send it
 exports.send = function (onoff) {
   if (onoff) {
-    readConfig();
+    if (!validateUsrAbrpConfig()) {
+      return
+    }
     if (objTimer != null) {
       console.warn("Already running !");
       return;
