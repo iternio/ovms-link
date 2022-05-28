@@ -106,14 +106,14 @@ function logger() {
 }
 
 function omitNil(obj) {
-  const clone = clone(obj);
-  const keys = Object.keys(clone);
+  const cloned = clone(obj);
+  const keys = Object.keys(cloned);
   keys.forEach(function (key) {
     if (isNil(clone[key])) {
       delete clone[key];
     }
   });
-  return clone;
+  return cloned;
 }
 
 function round(number, precision) {
