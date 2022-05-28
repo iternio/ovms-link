@@ -59,7 +59,6 @@
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
 const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
 const EVENT_MOTORS_ON = "vehicle.on";
-const URL = "http://api.iternio.com/1/tlm/send";
 
 function clone(obj) {
   return Object.assign({}, obj);
