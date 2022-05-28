@@ -65,6 +65,14 @@ const DEFAULT_CFG = {
   url: URL,
 };
 
+function clone(obj) {
+  return Object.assign({}, obj);
+}
+
+function isNil(value) {
+  return value == null;
+}
+
 function logger() {
   function log(message, obj) {
     print(message + (obj ? " " + JSON.stringify(obj) : "") + "\n");
@@ -97,6 +105,17 @@ function logger() {
   };
 }
 
+function omitNil(obj) {
+  const clone = clone(obj);
+  const keys = Object.keys(clone);
+  keys.forEach(function (key) {
+    if (isNil(clone[key])) {
+      delete clone[key];
+    }
+  });
+  return clone;
+}
+
 function round(number, precision) {
   if (!number) {
     return number; // could be 0, null or undefined
@@ -110,8 +129,6 @@ const console = logger();
 var DEBUG = true;
 var objTLM;
 var objTimer, objEvent;
-var sHasChanged = "";
-var bMotorsOn = false;
 
 // initialise from default
 var abrp_cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
@@ -131,6 +148,26 @@ function readConfig() {
   }
 }
 
+function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
+  // Significant if the SOC changes so that it updates in ABRP as soon as
+  // possible after it's changed within the vehicle.
+  if (currentTelemetry.soc !== previousTelemetry.soc) {
+    return true;
+  }
+  // Significant change if the power changes by more than 1kW while charging.
+  // Another piece of information that is clearly shown within ABRP so good
+  // to be responsive to those changes in charging power.
+  if (
+    currentTelemetry.is_charging &&
+    round(currentTelemetry.power) !== round(previousTelemetry.power)
+  ) {
+    return true;
+  }
+  // Otherwise, updates purely based on timing considerations based on the
+  // current state of the metrics and when the last telemetry was sent
+  return false;
+}
+
 // Make json telemetry object
 function InitTelemetryObj() {
   return {
@@ -148,26 +185,6 @@ function InitTelemetryObj() {
     current: 0,
     power: 0,
   };
-}
-
-function SetIfChanged(new_val, old_val, name, tolerance) {
-  if (old_val !== null && (new_val === null || new_val === undefined)) {
-    return old_val; // Sometimes we get nulls,
-  }
-  new_val = Number(new_val);
-  if (isNaN(new_val)) {
-    return old_val; // Maybe sometimes we get NaNs?
-  }
-  if (Math.abs(new_val - old_val) > tolerance) {
-    if (["power", "soc", "speed", "lat", "lon"].indexOf(name) >= 0) {
-      sHasChanged += " " + name + ": " + new_val + ", ";
-    }
-    return new_val;
-  } else if (new_val != old_val) {
-    return new_val;
-  } else {
-    return old_val;
-  }
 }
 
 function getOvmsMetrics() {
@@ -226,137 +243,15 @@ function mapMetricsToTelemetry(metrics) {
     est_battery_range: round(metrics["v.b.range.ideal"]),
   };
   console.debug("Mapped ABRP telemetry", telemetry);
-  return telemetry;
-}
-
-// Fill json telemetry object
-function UpdateTelemetryObj(myJSON) {
-  const started = performance.now();
-  if (!myJSON) {
-    // if the data object is undefined or null then return early
-    return false;
-  }
-  var read_num = 0;
-  var read_str = "";
-
-  sHasChanged = "";
-
-  if (bMotorsOn) {
-    sHasChanged = "_MOTORS-ON";
-    bMotorsOn = false;
-  }
-
-  myJSON.soh = SetIfChanged(
-    Number(OvmsMetrics.Value("v.b.soh")),
-    myJSON.soh,
-    "soh",
-    0
-  );
-  myJSON.soc = SetIfChanged(
-    Number(OvmsMetrics.Value("v.b.soc")),
-    myJSON.soc,
-    "soc",
-    0
-  );
-
-  if (myJSON.soh + myJSON.soc == 0) {
-    // Sometimes the canbus is not readable, and abrp doesn't like 0 values
-    console.error("canbus not readable: reset module and then put motors on");
-    return false;
-  }
-
-  //myJSON.lat = OvmsMetrics.AsFloat("v.p.latitude").toFixed(3);
-  //above code line works, except when value is undefined, after reboot
-
-  read_num = OvmsMetrics.AsFloat("v.p.latitude");
-  myJSON.lat = SetIfChanged(read_num.toFixed(4), myJSON.lat, "lat", 0.05);
-  read_num = Number(OvmsMetrics.AsFloat("v.p.longitude"));
-  myJSON.lon = SetIfChanged(read_num.toFixed(4), myJSON.lon, "lon", 0.05);
-  read_num = Number(OvmsMetrics.AsFloat("v.p.altitude"));
-  myJSON.elevation = SetIfChanged(
-    read_num.toFixed(1),
-    myJSON.elevation,
-    "elevation",
-    2
-  );
-
-  read_num = Number(OvmsMetrics.Value("v.b.power"));
-  myJSON.power = SetIfChanged(read_num.toFixed(3), myJSON.power, "power", 0);
-
-  myJSON.speed = SetIfChanged(
-    Number(OvmsMetrics.Value("v.p.speed")),
-    myJSON.speed,
-    "speed",
-    0
-  );
-  myJSON.batt_temp = SetIfChanged(
-    Number(OvmsMetrics.Value("v.b.temp")),
-    myJSON.batt_temp,
-    "batt_temp",
-    0
-  );
-  myJSON.ext_temp = SetIfChanged(
-    Number(OvmsMetrics.Value("v.e.temp")),
-    myJSON.ext_temp,
-    "ext_temp",
-    0
-  );
-  myJSON.voltage = SetIfChanged(
-    Number(OvmsMetrics.Value("v.b.voltage")),
-    myJSON.voltage,
-    "voltage",
-    0
-  );
-  myJSON.current = SetIfChanged(
-    Number(OvmsMetrics.Value("v.b.current")),
-    myJSON.current,
-    "current",
-    0
-  );
-
-  myJSON.utc = Math.trunc(Date.now() / 1000);
-  //myJSON.utc = OvmsMetrics.Value("m.time.utc");
-
-  // read_bool = Boolean(OvmsMetrics.Value("v.c.charging"));
-  // v.c.charging is also on when regen => not wanted here
-  read_str = OvmsMetrics.Value("v.c.state");
-  if (read_str == "charging" || read_str == "topoff") {
-    read_num = 1;
-    console.debug("Charging with mode = " + OvmsMetrics.Value("v.c.mode"));
-  } else {
-    read_num = 0;
-  }
-  myJSON.is_charging = SetIfChanged(
-    read_num,
-    myJSON.is_charging,
-    "is_charging",
-    0
-  );
-
-  if (sHasChanged !== "") {
-    console.debug(sHasChanged);
-  }
-  const duration = performance.now() - started;
-  console.debug("Getting OvmsMetrics took " + round(duration) + "ms");
-  return sHasChanged !== "";
+  return omitNil(telemetry);
 }
 
 function InitTelemetry() {
   objTLM = InitTelemetryObj();
-  sHasChanged = "";
-}
-
-function UpdateTelemetry() {
-  if (!objTLM) {
-    InitTelemetry(); // If the telemetry object doesn't exist, create it.
-  }
-  var bChanged = UpdateTelemetryObj(objTLM);
-  return bChanged;
 }
 
 function CloseTelemetry() {
   objTLM = null;
-  sHasChanged = "";
 }
 
 // http request callback if successful
@@ -398,12 +293,11 @@ function GetURLcfg() {
   return cfg;
 }
 
-var last_send = 0.0;
-var last_data = {};
 function SendLiveData() {
-  // Check if telemetry updated.
-  var bChanged = UpdateTelemetry();
-  var elapsed = Math.trunc(Date.now() / 1000) - last_send;
+  var metrics = getOvmsMetrics();
+  var currentTelemetry = mapMetricsToTelemetry(metrics);
+  var bChanged = isSignificantTelemetryChange(currentTelemetry, objTLM);
+  var elapsed = currentTelemetry.utc - objTLM.utc;
   var should_send = false;
   if (bChanged) {
     should_send = true;
@@ -414,42 +308,16 @@ function SendLiveData() {
     console.info("Sending: 25 minutes passed.");
   } else if (
     elapsed >= 25.0 &&
-    (objTLM.is_charging || Math.abs(objTLM.speed) >= 5.0)
+    (currentTelemetry.is_charging || Math.abs(currentTelemetry.speed) >= 5.0)
   ) {
     // Send every 25 seconds at least if active.  This keeps the live data marked 'live'
     // in ABRP
     should_send = true;
     console.info("Sending: Charging / driving and 25 seconds passed.");
   }
+  objTLM = clone(currentTelemetry);
   if (should_send) {
-    zeroStaleData();
     HTTP.Request(GetURLcfg());
-    last_send = Math.trunc(Date.now() / 1000);
-    last_data = {
-      power: objTLM.power,
-      current: objTLM.current,
-      is_charging: objTLM.is_charging,
-      speed: objTLM.speed,
-    };
-  }
-}
-
-function zeroStaleData() {
-  const elapsed = Math.trunc(Date.now() / 1000) - last_send;
-  if (elapsed >= 300) {
-    // If any of these values are the same as they were 5 or more minutes ago, consider them stale and set them zero.
-    if (last_data.power == objTLM.power) {
-      objTLM.power = 0;
-    }
-    if (last_data.current == objTLM.current) {
-      objTLM.current = 0;
-    }
-    if (last_data.is_charging == objTLM.is_charging) {
-      objTLM.is_charging = 0;
-    }
-    if (last_data.speed == objTLM.speed || objTLM.speed < 0.5) {
-      objTLM.speed = 0;
-    }
   }
 }
 
