@@ -215,6 +215,12 @@ function getOvmsMetrics() {
   return metrics;
 }
 
+function getUsrAbrpConfig() {
+  const config = OvmsConfig.GetValues("usr", "abrp.");
+  console.debug("usr abrp. config", config);
+  return config;
+}
+
 function mapMetricsToTelemetry(metrics) {
   const chargingStates = ["charging", "topoff"];
   const dcfcMode = "performance";
@@ -246,51 +252,38 @@ function mapMetricsToTelemetry(metrics) {
   return omitNil(telemetry);
 }
 
+function sendTelemetry(telemetry) {
+  const config = getUsrAbrpConfig();
+  const token = config.user_token;
+  if (!token) {
+    console.error("config usr abrp.user_token not set");
+    return;
+  }
+  const url =
+    "http://api.iternio.com/1/tlm/send?api_key=" +
+    encodeURIComponent(OVMS_API_KEY) +
+    "&token=" +
+    encodeURIComponent(token) +
+    "&tlm=" +
+    encodeURIComponent(JSON.stringify(telemetry));
+  console.debug("ABRP URL", url);
+  HTTP.Request({
+    done: function (response) {
+      console.debug("ABRP response", response);
+    },
+    fail: function (error) {
+      console.error("ABRP error", error);
+    },
+    url,
+  });
+}
+
 function InitTelemetry() {
   objTLM = InitTelemetryObj();
 }
 
 function CloseTelemetry() {
   objTLM = null;
-}
-
-// http request callback if successful
-function OnRequestDone(resp) {
-  console.debug("response=" + resp.statusCode + ":" + resp.statusText);
-  //OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + sHasChanged);
-}
-
-// http request callback if failed
-function OnRequestFail(error) {
-  console.error("Error communicating with ABRP", error);
-  // OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::" + JSON.stringify(error));
-}
-
-// Return full url with JSON telemetry object
-function GetUrlABRP() {
-  var urljson = abrp_cfg.url;
-  urljson += "?";
-  urljson += "api_key=" + OVMS_API_KEY;
-  urljson += "&";
-  urljson += "token=" + abrp_cfg.user_token;
-  urljson += "&";
-  urljson += "tlm=" + encodeURIComponent(JSON.stringify(objTLM));
-  console.debug("ABRP URL", urljson);
-  return urljson;
-}
-
-// Return config object for HTTP request
-function GetURLcfg() {
-  var cfg = {
-    url: GetUrlABRP(),
-    done: function (resp) {
-      OnRequestDone(resp);
-    },
-    fail: function (err) {
-      OnRequestFail(err);
-    },
-  };
-  return cfg;
 }
 
 function SendLiveData() {
@@ -315,10 +308,10 @@ function SendLiveData() {
     should_send = true;
     console.info("Sending: Charging / driving and 25 seconds passed.");
   }
-  objTLM = clone(currentTelemetry);
   if (should_send) {
-    HTTP.Request(GetURLcfg());
+    sendTelemetry(currentTelemetry);
   }
+  objTLM = clone(currentTelemetry);
 }
 
 function InitTimer() {
