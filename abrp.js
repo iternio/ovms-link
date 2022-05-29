@@ -57,8 +57,8 @@
  */
 
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
-const TIMER_INTERVAL = "ticker.10"; // every 10 seconds
-const EVENT_MOTORS_ON = "vehicle.on";
+
+// TODO: VERSION
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -125,7 +125,6 @@ var DEBUG = true;
 var objTLM = {
   utc: 0,
 };
-var objTimer, objEvent;
 let subscribed = false;
 
 function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
@@ -280,17 +279,20 @@ function SendLiveData() {
   objTLM = clone(currentTelemetry);
 }
 
-function InitTimer() {
-  PubSub.subscribe(TIMER_INTERVAL, SendLiveData);
-  PubSub.subscribe(EVENT_MOTORS_ON, SendLiveData);
-  subscribed = true
+function subscribe() {
+  if (subscribed) {
+    return;
+  }
+  PubSub.subscribe("ticker.10", SendLiveData);
+  PubSub.subscribe("vehicle.on", SendLiveData);
+  subscribed = true;
 }
 
-function CloseTimer() {
+function unsubscribe() {
   // unsubscribe can be passed the subscription identifier or the function
-  // reference to unsubs
+  // reference to unsubscribe from all events using that handler
   PubSub.unsubscribe(SendLiveData);
-  subscribed = false
+  subscribed = false;
 }
 
 // API method abrp.onetime():
@@ -338,11 +340,11 @@ exports.resetConfig = function () {
 };
 
 // API method abrp.send():
-//   Checks every minut if important data has changed, and send it
+//   Checks every minute if important data has changed, and send it
 exports.send = function (onoff) {
   if (onoff) {
     if (!validateUsrAbrpConfig()) {
-      return
+      return;
     }
     if (subscribed) {
       console.warn("Already running !");
@@ -350,7 +352,7 @@ exports.send = function (onoff) {
     }
     console.info("Start sending data...");
     SendLiveData();
-    InitTimer();
+    subscribe();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::started");
   } else {
     if (!subscribed) {
@@ -358,7 +360,7 @@ exports.send = function (onoff) {
       return;
     }
     console.info("Stop sending data");
-    CloseTimer();
+    unsubscribe();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::stopped");
   }
 };
