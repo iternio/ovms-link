@@ -1,47 +1,22 @@
 /**
- *       /store/scripts/abrp.js
+ * Uses the embedded GSM of OVMS to periodically send vehicle telemetry (if
+ * necessary) to ABRP, so there's an impact on GSM data consumption.
+ * /!\ requires OVMS firmware version 3.2.008-147 minimum (for HTTP call)
  *
- * Module plugin:
- *  Send live data to a better route planner
- *  This version uses the embedded GSM of OVMS, so there's an impact on data consumption
- *  /!\ requires OVMS firmware version 3.2.008-147 minimum (for HTTP call)
- *
- * Version 1.3   2020   inf0mike (forum https://www.openvehicles.com)
- * Version 1.4   2021   Jason_ABRP
- * Enable:
- *  - install at above path
+ * Installation:
+ *  - install this script to /store/scripts/lib/abrp.js
  *  - config set usr abrp.user_token "your-token-goes-here"
  *  - add to /store/scripts/ovmsmain.js:
- *                  abrp = require("abrp");
- *                  abrp.send(1)
+ *        abrp = require("lib/abrp");
+ *        abrp.send(1)
  *  - script reload
  *
  * Usage:
- *  - script eval abrp.info()         => to display vehicle data to be sent to abrp
- *  - script eval abrp.onetime()      => to launch one time the request to abrp server
- *  - script eval abrp.send(1)        => toggle send data to abrp
- *  -                      (0)        => stop sending data
- *  - script eval abrp.resetConfig()  => reset configuration to defaults
- *
- *  Version 1.4 updates:
- *  - Update script so it can be running continuously
- *  - Remove unneeded dependencies on multiple config items (Now only have to set token)
- *  - Stability improvements
- *
- * Version 1.3 updates:
- *  - Fix for rounding of fractional SOC causing abrp to report SOC off by 1
- *  - Fix for altitude never being sent
- *  - New convenience method to reset config to defaults
- *
- * Version 1.2 updates:
- *  - based now on OVMS configuration to store user token, car model and url
- *  - review messages sent during charge
- *  - send a message when vehicle is on before moving to update abrp
- *
- * Version 1.1 fix and update:
- *  - fixed the utc refreshing issue
- *  - send notifications
- *  - send live data only if necessary
+ *  - script eval abrp.info()         => to display vehicle telemetry that would be sent to ABRP
+ *  - script eval abrp.onetime()      => to send current telemetry to ABRP
+ *  - script eval abrp.send(1)        => start periodically sending telemetry (if necessary) to ABRP
+ *  - script eval abrp.send(0)        => stop sending telemetry
+ *  - script eval abrp.resetConfig()  => reset configuration
  **/
 
 // https://docs.openvehicles.com/en/latest/userguide/scripting.html
