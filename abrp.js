@@ -23,6 +23,7 @@
 
 // NOTE: const in duktape implementation is not much more than var offers
 // https://wiki.duktape.org/postes5features
+const DEBUG = true
 const OVMS_API_KEY = '32b2162f-9599-4647-8139-66e9f9528370'
 const VERSION = '1.5.0'
 
@@ -34,6 +35,7 @@ function isNil(value) {
   return value == null
 }
 
+// simple console shim
 function logger() {
   function log(message, obj) {
     print(message + (obj ? ' ' + JSON.stringify(obj) : '') + '\n')
@@ -84,41 +86,11 @@ function round(number, precision) {
   return Number(number.toFixed(precision || 0))
 }
 
-// simple console shim
 const console = logger()
-
-var DEBUG = true
 var previousTelemetry = {
   utc: 0,
 }
 var subscribed = false
-
-function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
-  // Significant if the SOC changes so that it updates in ABRP as soon as
-  // possible after it's changed within the vehicle.
-  if (currentTelemetry.soc !== previousTelemetry.soc) {
-    return true
-  }
-  // Significant change if either the is_parked or is_charging states changes
-  if (currentTelemetry.is_charging !== previousTelemetry.is_charging) {
-    return true
-  }
-  if (currentTelemetry.is_parked !== previousTelemetry.is_parked) {
-    return true
-  }
-  // Significant change if the power changes by more than 1kW while charging.
-  // Another piece of information that is clearly shown within ABRP so good
-  // to be responsive to those changes in charging power.
-  if (
-    currentTelemetry.is_charging &&
-    round(currentTelemetry.power) !== round(previousTelemetry.power)
-  ) {
-    return true
-  }
-  // Otherwise, updates purely based on timing considerations based on the
-  // current state of the metrics and when the last telemetry was sent
-  return false
-}
 
 function getOvmsMetrics() {
   const metricNames = [
@@ -152,6 +124,33 @@ function getUsrAbrpConfig() {
   const config = OvmsConfig.GetValues('usr', 'abrp.')
   console.debug('usr abrp. config', config)
   return config
+}
+
+function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
+  // Significant if the SOC changes so that it updates in ABRP as soon as
+  // possible after it's changed within the vehicle.
+  if (currentTelemetry.soc !== previousTelemetry.soc) {
+    return true
+  }
+  // Significant change if either the is_parked or is_charging states changes
+  if (currentTelemetry.is_charging !== previousTelemetry.is_charging) {
+    return true
+  }
+  if (currentTelemetry.is_parked !== previousTelemetry.is_parked) {
+    return true
+  }
+  // Significant change if the power changes by more than 1kW while charging.
+  // Another piece of information that is clearly shown within ABRP so good
+  // to be responsive to those changes in charging power.
+  if (
+    currentTelemetry.is_charging &&
+    round(currentTelemetry.power) !== round(previousTelemetry.power)
+  ) {
+    return true
+  }
+  // Otherwise, updates purely based on timing considerations based on the
+  // current state of the metrics and when the last telemetry was sent
+  return false
 }
 
 function mapMetricsToTelemetry(metrics) {
