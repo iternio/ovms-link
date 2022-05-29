@@ -259,13 +259,13 @@ function sendTelemetryIfNecessary() {
   const elapsed = currentTelemetry.utc - previousTelemetry.utc;
   var maxElapsedDuration;
   if (isSignificantTelemetryChange(currentTelemetry, previousTelemetry)) {
-    console.debug("Significant telemetry change");
+    console.info("Significant telemetry change");
     maxElapsedDuration = 0; // always send
   } else if (isDriving && currentTelemetry.speed > minCalibrationSpeed) {
-    console.debug("Driving and speed greater than minimum calibration speed");
+    console.info("Driving and speed greater than minimum calibration speed");
     maxElapsedDuration = maxCalibrationTimeout;
   } else if (isDriving || currentTelemetry.is_charging) {
-    console.debug("Driving or charging");
+    console.info("Driving or charging");
     maxElapsedDuration = maxLiveConnectionTimeout - liveConnectionTimeoutBuffer;
   } else {
     maxElapsedDuration = 30 * 60; // At least every 30 minutes
