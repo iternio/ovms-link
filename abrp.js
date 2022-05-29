@@ -122,7 +122,7 @@ function round(number, precision) {
 const console = logger();
 
 var DEBUG = true;
-var objTLM = {
+var previousTelemetry = {
   utc: 0,
 };
 let subscribed = false;
@@ -245,6 +245,38 @@ function sendTelemetry(telemetry) {
   });
 }
 
+function sendTelemetryIfNecessary() {
+  const minCalibrationSpeed = 70; // kph
+  const minDrivingSpeed = 5; // kph
+  const maxCalibrationTimeout = 5; // seconds
+  const maxLiveConnectionTimeout = 3 * 60; // 3 minutes
+  const liveConnectionTimeoutBuffer = 20; // seconds
+
+  const metrics = getOvmsMetrics();
+  const currentTelemetry = mapMetricsToTelemetry(metrics);
+  const isDriving = currentTelemetry.speed > minDrivingSpeed;
+
+  const elapsed = currentTelemetry.utc - previousTelemetry.utc;
+  let maxElapsedDuration;
+  if (isSignificantTelemetryChange(currentTelemetry, previousTelemetry)) {
+    console.debug("Significant telemetry change");
+    maxElapsedDuration = 0; // always send
+  } else if (isDriving && currentTelemetry.speed > minCalibrationSpeed) {
+    console.debug("Driving and speed greater than minimum calibration speed");
+    maxElapsedDuration = maxCalibrationTimeout;
+  } else if (isDriving || currentTelemetry.is_charging) {
+    console.debug("Driving or charging");
+    maxElapsedDuration = maxLiveConnectionTimeout - liveConnectionTimeoutBuffer;
+  } else {
+    maxElapsedDuration = 30 * 60; // At least every 30 minutes
+  }
+
+  if (elapsed >= maxElapsedDuration) {
+    sendTelemetry(currentTelemetry);
+  }
+  previousTelemetry = clone(currentTelemetry);
+}
+
 function validateUsrAbrpConfig() {
   const config = getUsrAbrpConfig();
   if (!config.user_token) {
@@ -258,48 +290,20 @@ function validateUsrAbrpConfig() {
   return true;
 }
 
-function SendLiveData() {
-  var metrics = getOvmsMetrics();
-  var currentTelemetry = mapMetricsToTelemetry(metrics);
-  var bChanged = isSignificantTelemetryChange(currentTelemetry, objTLM);
-  var elapsed = currentTelemetry.utc - objTLM.utc;
-  var should_send = false;
-  if (bChanged) {
-    should_send = true;
-    console.info("Sending: Telemetry changed.");
-  } else if (elapsed >= 1500) {
-    // Send the data if last send was more than 25 minutes ago.
-    should_send = true;
-    console.info("Sending: 25 minutes passed.");
-  } else if (
-    elapsed >= 25.0 &&
-    (currentTelemetry.is_charging || Math.abs(currentTelemetry.speed) >= 5.0)
-  ) {
-    // Send every 25 seconds at least if active.  This keeps the live data marked 'live'
-    // in ABRP
-    should_send = true;
-    console.info("Sending: Charging / driving and 25 seconds passed.");
-  }
-  if (should_send) {
-    sendTelemetry(currentTelemetry);
-  }
-  objTLM = clone(currentTelemetry);
-}
-
 function subscribe() {
   if (subscribed) {
     return;
   }
-  PubSub.subscribe("ticker.10", SendLiveData);
-  PubSub.subscribe("vehicle.on", SendLiveData);
-  PubSub.subscribe("vehicle.off", SendLiveData);
+  PubSub.subscribe("ticker.10", sendTelemetryIfNecessary);
+  PubSub.subscribe("vehicle.on", sendTelemetryIfNecessary);
+  PubSub.subscribe("vehicle.off", sendTelemetryIfNecessary);
   subscribed = true;
 }
 
 function unsubscribe() {
   // unsubscribe can be passed the subscription identifier or the function
   // reference to unsubscribe from all events using that handler
-  PubSub.unsubscribe(SendLiveData);
+  PubSub.unsubscribe(sendTelemetryIfNecessary);
   subscribed = false;
 }
 
@@ -309,7 +313,7 @@ exports.onetime = function () {
   if (!validateUsrAbrpConfig()) {
     return;
   }
-  SendLiveData();
+  sendTelemetryIfNecessary();
 };
 
 // API method abrp.info():
@@ -359,7 +363,7 @@ exports.send = function (onoff) {
       return;
     }
     console.info("Start sending data...");
-    SendLiveData();
+    sendTelemetryIfNecessary();
     subscribe();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::started");
   } else {
