@@ -44,17 +44,7 @@
  *  - send live data only if necessary
  **/
 
-/*
- * Declarations:
- *   OVMS_API_KEY : API_KEY to access to ABRP API, given by the developer
- *   MY_TOKEN : Your token (corresponding to your abrp profile)
- *   TIMER_INTERVAL : to subscribe to a ticker event
- *   URL : url to send telemetry to abrp following: https://iternio.com/index.php/iternio-telemetry-api/
- *   CR : Carriage Return for console prints
- *
- *   objTLM : JSON object containing data read
- *   objTimer : timer object
- */
+// https://docs.openvehicles.com/en/latest/userguide/scripting.html
 
 // NOTE: const in duktape implementation is not much more than var offers
 // https://wiki.duktape.org/postes5features
