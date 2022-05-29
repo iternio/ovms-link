@@ -282,7 +282,9 @@ exports.onetime = function () {
   if (!validateUsrAbrpConfig()) {
     return
   }
-  sendTelemetryIfNecessary()
+  const metrics = getOvmsMetrics()
+  const telemetry = mapMetricsToTelemetry(metrics)
+  sendTelemetry(telemetry)
 }
 
 // API method abrp.info():
