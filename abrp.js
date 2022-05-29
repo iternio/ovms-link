@@ -125,7 +125,7 @@ var DEBUG = true;
 var previousTelemetry = {
   utc: 0,
 };
-let subscribed = false;
+var subscribed = false;
 
 function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
   // Significant if the SOC changes so that it updates in ABRP as soon as
@@ -257,7 +257,7 @@ function sendTelemetryIfNecessary() {
   const isDriving = currentTelemetry.speed > minDrivingSpeed;
 
   const elapsed = currentTelemetry.utc - previousTelemetry.utc;
-  let maxElapsedDuration;
+  var maxElapsedDuration;
   if (isSignificantTelemetryChange(currentTelemetry, previousTelemetry)) {
     console.debug("Significant telemetry change");
     maxElapsedDuration = 0; // always send
