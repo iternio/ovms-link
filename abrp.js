@@ -133,6 +133,13 @@ function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
   if (currentTelemetry.soc !== previousTelemetry.soc) {
     return true;
   }
+  // Significant change if either the is_parked or is_charging states changes
+  if (currentTelemetry.is_charging !== previousTelemetry.is_charging) {
+    return true;
+  }
+  if (currentTelemetry.is_parked !== previousTelemetry.is_parked) {
+    return true;
+  }
   // Significant change if the power changes by more than 1kW while charging.
   // Another piece of information that is clearly shown within ABRP so good
   // to be responsive to those changes in charging power.
@@ -285,6 +292,7 @@ function subscribe() {
   }
   PubSub.subscribe("ticker.10", SendLiveData);
   PubSub.subscribe("vehicle.on", SendLiveData);
+  PubSub.subscribe("vehicle.off", SendLiveData);
   subscribed = true;
 }
 
