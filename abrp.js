@@ -56,9 +56,10 @@
  *   objTimer : timer object
  */
 
+// NOTE: const in duktape implementation is not much more than var offers
+// https://wiki.duktape.org/postes5features
 const OVMS_API_KEY = "32b2162f-9599-4647-8139-66e9f9528370";
-
-// TODO: VERSION
+const VERSION="1.5.0"
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -324,6 +325,7 @@ exports.info = function () {
   const telemetry = mapMetricsToTelemetry(metrics);
   // DEBUG = true;
   // space before units as per NIST guidelines https://physics.nist.gov/cuu/Units/checklist.html
+  console.log("Plugin Version:   " + VERSION);
   console.log("State of Charge:  " + telemetry.soc + " %");
   console.log("Battery Power:    " + telemetry.power + " kW");
   console.log("Vehicle Speed:    " + telemetry.speed + " kph");
