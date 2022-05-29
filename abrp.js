@@ -232,8 +232,8 @@ function sendTelemetryIfNecessary() {
   } else if (isDriving && currentTelemetry.speed > minCalibrationSpeed) {
     console.info('Driving and speed greater than minimum calibration speed')
     maxElapsedDuration = maxCalibrationTimeout
-  } else if (isDriving || currentTelemetry.is_charging) {
-    console.info('Driving or charging')
+  } else if (isDriving || currentTelemetry.is_dcfc) {
+    console.info('Driving or DC fast charging')
     maxElapsedDuration = maxLiveConnectionTimeout - liveConnectionTimeoutBuffer
   } else {
     maxElapsedDuration = 30 * 60 // At least every 30 minutes
