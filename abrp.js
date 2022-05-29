@@ -126,6 +126,7 @@ var objTLM = {
   utc: 0,
 };
 var objTimer, objEvent;
+let subscribed = false;
 
 function isSignificantTelemetryChange(currentTelemetry, previousTelemetry) {
   // Significant if the SOC changes so that it updates in ABRP as soon as
@@ -280,15 +281,16 @@ function SendLiveData() {
 }
 
 function InitTimer() {
-  objTimer = PubSub.subscribe(TIMER_INTERVAL, SendLiveData);
-  objEvent = PubSub.subscribe(EVENT_MOTORS_ON, SendLiveData);
+  PubSub.subscribe(TIMER_INTERVAL, SendLiveData);
+  PubSub.subscribe(EVENT_MOTORS_ON, SendLiveData);
+  subscribed = true
 }
 
 function CloseTimer() {
-  PubSub.unsubscribe(objEvent);
-  PubSub.unsubscribe(objTimer);
-  objEvent = null;
-  objTimer = null;
+  // unsubscribe can be passed the subscription identifier or the function
+  // reference to unsubs
+  PubSub.unsubscribe(SendLiveData);
+  subscribed = false
 }
 
 // API method abrp.onetime():
@@ -342,7 +344,7 @@ exports.send = function (onoff) {
     if (!validateUsrAbrpConfig()) {
       return
     }
-    if (objTimer != null) {
+    if (subscribed) {
       console.warn("Already running !");
       return;
     }
@@ -351,7 +353,7 @@ exports.send = function (onoff) {
     InitTimer();
     OvmsNotify.Raise("info", "usr.abrp.status", "ABRP::started");
   } else {
-    if (objTimer == null) {
+    if (!subscribed) {
       console.warn("Already stopped !");
       return;
     }
