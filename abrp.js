@@ -253,7 +253,7 @@ function validateUsrAbrpConfig() {
       "usr.abrp.status",
       "ABRP::config usr abrp.user_token not set"
     );
-    return false
+    return false;
   }
   return true;
 }
@@ -307,7 +307,7 @@ function unsubscribe() {
 //   Read and send data, but only once, no timer launched
 exports.onetime = function () {
   if (!validateUsrAbrpConfig()) {
-    return
+    return;
   }
   SendLiveData();
 };
