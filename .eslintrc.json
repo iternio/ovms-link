@@ -1,0 +1,22 @@
+{
+  "env": {
+    "commonjs": true
+  },
+  "extends": "eslint:recommended",
+  "globals": {
+    "HTTP": "readonly",
+    "OvmsConfig": "readonly",
+    "OvmsMetrics": "readonly",
+    "OvmsNotify": "readonly",
+    "PubSub": "readonly",
+    "performance": "readonly",
+    "print": "readonly"
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "impliedStrict": true
+    },
+    "ecmaVersion": 2015
+  },
+  "rules": {}
+}
