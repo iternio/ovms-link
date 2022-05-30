@@ -35,28 +35,33 @@ function isNil(value) {
   return value == null
 }
 
+function timestamp() {
+  return new Date().toLocaleString()
+}
+
 // simple console shim
 function logger() {
+  // TODO: timestamp for the log entry
   function log(message, obj) {
     print(message + (obj ? ' ' + JSON.stringify(obj) : '') + '\n')
   }
 
   function debug(message, obj) {
     if (DEBUG) {
-      log('DEBUG: ' + message, obj)
+      log('(' + timestamp() + ') DEBUG: ' + message, obj)
     }
   }
 
   function error(message, obj) {
-    log('ERROR: ' + message, obj)
+    log('(' + timestamp() + ') ERROR: ' + message, obj)
   }
 
   function info(message, obj) {
-    log('INFO: ' + message, obj)
+    log('(' + timestamp() + ') INFO: ' + message, obj)
   }
 
   function warn(message, obj) {
-    log('WARN: ' + message, obj)
+    log('(' + timestamp() + ') WARN: ' + message, obj)
   }
 
   return {
