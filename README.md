@@ -20,21 +20,16 @@ based on live information.
 
 ### Install the abrp.js Plugin in OVMS
 
-1. Create the `abrp.js` file
-   1. Login to the
-      [OVMS web console](https://docs.openvehicles.com/en/latest/userguide/installation.html#initial-connection-wifi-and-browser)
-   2. Navigate to the **Tools** -> **Editor** menu item
-   3. Create a new `lib` directory in `/store/scripts` if it does not exist
-   4. Create a new `abrp.js` file in the `/store/scripts/lib` directory
-   5. Copy the content of the `lib/abrp.js` file in this repository to that new
-      file and save
-2. Create the `ovmsmain.js` file
-
-   1. Create a new `ovmsmain.js` file in `/store/scripts` if it does not exist
-   2. Copy the content of the `ovmsmain.js` file in this repository to that new
-      file and **Save**
-
-3. **Reload JS Engine**
+1. Login to the
+   [OVMS web console](https://docs.openvehicles.com/en/latest/userguide/installation.html#initial-connection-wifi-and-browser)
+2. Navigate to the **Tools** -> **Editor** menu item
+3. Create a new `lib` directory in `/store/scripts` if it does not exist
+4. Create a new `abrp.js` file in the `/store/scripts/lib` directory
+5. Copy the content of the `lib/abrp.js` file in this repository to that new
+   file and save
+6. Create a new `ovmsmain.js` file in `/store/scripts` if it does not exist
+7. Copy the content of the `ovmsmain.js` file in this repository to that new
+   file and **Save**
 
 ### Configure Plugin
 
