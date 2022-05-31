@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## Version 1.5, 2022, dteirney
+## Version 1.5, 2022, `dteirney`
 
-- Add additional telemetry fields
+- Additional telemetry fields sent to ABRP
   - `is_dcfc`
   - `is_parked`
   - `kwh_charged`
@@ -18,14 +18,14 @@
 - Numerous code modifications to reduce use of module state within module
   functions
 
-## Version 1.4, 2021, Jason_ABRP
+## Version 1.4, 2021, `Jason_ABRP`
 
 - Update script so it can be running continuously
 - Remove unneeded dependencies on multiple config items (Now only have to set
   token)
 - Stability improvements
 
-## Version 1.3, 2020, inf0mike
+## Version 1.3, 2020, `inf0mike`
 
 - Background on the OVMS forum at
   [Send live data to abrp](https://www.openvehicles.com/node/2375)
