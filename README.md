@@ -13,9 +13,10 @@ based on live information.
 ### Obtain Live Data Token
 
 1. Register with [A Better Routeplanner (ABRP)](https://abetterrouteplanner.com)
-2. Setup your vehicle starting with **Select car model**
-3. Ins the settings for the new vehicle, click on the **Live data** button to
-   generate a generic token
+   and login
+2. Setup your vehicle, starting with **Select car model**
+3. In the settings for the new vehicle, click on the **Live data** button to
+   generate a generic token. Keep a record of this token
 
 ### Install the abrp.js Plugin in OVMS
 
@@ -58,3 +59,13 @@ live telemetry from the vehicle to ABRP on a periodic basis. When data is sent
 depends on what is happening for the vehicle. For example, when driving,
 information will be sent more frequently than when charging, and even less often
 when the car is off.
+
+### OVMS Shell Commands
+
+- `script eval abrp.info()` - display vehicle telemetry that would be sent to
+  ABRP
+- `script eval abrp.onetime()` - send current telemetry to ABRP once only
+- `script eval abrp.send(1)` - start periodically sending telemetry to ABRP
+  (when necessary)
+- `script eval abrp.send(0)` - stop sending telemetry
+- `script eval abrp.resetConfig()` - reset configuration
