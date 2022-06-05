@@ -1,6 +1,6 @@
 {
   "name": "ovms-link",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "ovms-link",
   "main": "abrp.js",
   "private": true,

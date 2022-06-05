@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Version 1.5, 2022, `dteirney`
+## Version 2.0, 2022, `dteirney`
 
 - Additional telemetry fields sent to ABRP
   - `is_dcfc`
@@ -9,11 +9,14 @@
   - `heading`
   - `odometer`
   - `est_battery_range`
+- Nissan Leaf specific metrics used for SOC, SOH and estimated range
 - Reduce bandwidth by only sending frequent data for calibration (every 10
-  seconds) when the driving speed is greater than 70 kph
+  seconds) when the driving speed is greater than 30 kph
 - Reduce bandwidth by changing the determination of a significant telemetry
   change to take into account whether the vehicle is charging, and only send if
   the power changes by more than 1 kW.
+- Capture speed and power metrics every second and then send median for better
+  ABRP calibration of estimated km/kWh @ 110 kph
 - Additional DEBUG logging included (off by default)
 - Numerous code modifications to reduce use of module state within module
   functions
