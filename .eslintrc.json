@@ -1,8 +1,13 @@
 {
   "env": {
-    "commonjs": true
+    "commonjs": true,
+    "jest/globals": true
   },
-  "extends": "eslint:recommended",
+  "extends": [
+    "eslint:recommended",
+    "plugin:jest/recommended",
+    "plugin:jest/style"
+  ],
   "globals": {
     "HTTP": "readonly",
     "OvmsConfig": "readonly",
@@ -18,5 +23,6 @@
     },
     "ecmaVersion": 2015
   },
+  "plugins": ["jest"],
   "rules": {}
 }
