@@ -15,8 +15,8 @@
 - Reduce bandwidth by changing the determination of a significant telemetry
   change to take into account whether the vehicle is charging, and only send if
   the power changes by more than 1 kW.
-- Capture speed and power metrics every second and then send median for better
-  ABRP calibration of estimated km/kWh @ 110 kph
+- Capture speed and power metrics every second and then send median based on the
+  power reading for more accurate ABRP calibration of estimated km/kWh @ 110 kph
 - Additional DEBUG logging included (off by default)
 - Numerous code modifications to reduce use of module state within module
   functions
