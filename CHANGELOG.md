@@ -11,7 +11,7 @@
   - `est_battery_range`
 - Nissan Leaf specific metrics used for SOC, SOH and estimated range
 - Reduce bandwidth by only sending frequent data for calibration (every 10
-  seconds) when the driving speed is greater than 30 kph
+  seconds) when the driving speed is greater than 70 kph
 - Reduce bandwidth by changing the determination of a significant telemetry
   change to take into account whether the vehicle is charging, and only send if
   the power changes by more than 1 kW.
