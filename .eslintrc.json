@@ -1,0 +1,28 @@
+{
+  "env": {
+    "commonjs": true,
+    "jest/globals": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:jest/recommended",
+    "plugin:jest/style"
+  ],
+  "globals": {
+    "HTTP": "readonly",
+    "OvmsConfig": "readonly",
+    "OvmsMetrics": "readonly",
+    "OvmsNotify": "readonly",
+    "PubSub": "readonly",
+    "performance": "readonly",
+    "print": "readonly"
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "impliedStrict": true
+    },
+    "ecmaVersion": 2015
+  },
+  "plugins": ["jest"],
+  "rules": {}
+}
