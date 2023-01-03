@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.0.1, 2023-01-02, `dteirney` and `Edwintenhaaf`
+
+- Change to HTTPS for the ABRP API endpoint
+- Associated instructions to setup the trusted root CA certificate for the ABRP
+  API
+
 ## Version 2.0, 2022, `dteirney`
 
 - Additional telemetry fields sent to ABRP
