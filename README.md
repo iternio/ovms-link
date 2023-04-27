@@ -31,28 +31,24 @@ based on live information.
 7. Copy the content of the `ovmsmain.js` file in this repository to that new
    file and **Save**
 
-### Install the Baltimore CyberTrust Root Certificate in OVMS
+### Install the Google Subordinate CA Certificate in OVMS
 
-The 2.0.1 version of the plugin changed to use HTTPS to communicate with the
-ABRP API. This requires a new trusted root CA certificate to be installed into
-OVMS as per the instructions at the
-[OVMS SSL/TLS UserGuide](https://docs.openvehicles.com/en/latest/userguide/ssltls.html)
+A recent change to the APRB API means a new CA certificate is required. This 
+requires a Google subordinate CA certificate  ([GTS CA 1P5](https://pki.goog/repo/certs/gts1p5.pem)) 
+to be installed into OVMS as per the instructions at the [OVMS SSL/TLS UserGuide](https://docs.openvehicles.com/en/latest/userguide/ssltls.html)
 
-This repo contains the trusted root CA certificate for the ABRP API server
-hosted at `api.iternio.com`.
+The [GTS CA 1P5](https://pki.goog/repo/certs/gts1p5.pem) can be downloaded from the [Google Trust Services site](https://pki.goog/repository/).
 
 1. Login to the
    [OVMS web console](https://docs.openvehicles.com/en/latest/userguide/installation.html#initial-connection-wifi-and-browser)
 2. Navigate to the **Tools** -> **Editor** menu item
 3. Create a new `trustedca` directory in `/store/` if it does not exist
-4. Create a new `Baltimore CyberTrust Root.cer` file in the `/store/trustedca`
-   directory
-5. Copy the contents of the same `Baltimore CyberTrust Root.cer` file in this
-   repo into that file
+4. Create a new `gts1p5.pem` file in the `/store/trustedca` directory
+5. Copy the contents of the `gts1p5.pem` file into that file
 6. Navigate to the **Tools** -> **Shell** menu item
 7. Execute the following message: `tls trust reload`
 8. Execute the following message: `tls trust list` and confirm that
-   `Baltimore CyberTrust Root.cer` shows up in the list
+   `gts1p5.pem` shows up in the list
 
 ### Configure Plugin
 
