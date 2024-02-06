@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.1.0, 2023-XX-XX, `kezarjg`
+
+- Programattically determine what vehicle metrics are supported and only add supported metrics to the telemetry object.
+- Additional telemetry field sent to ABRP
+  - `capacity`
+
 ## Version 2.0.1, 2023-01-02, `dteirney` and `Edwintenhaaf`
 
 - Change to HTTPS for the ABRP API endpoint
