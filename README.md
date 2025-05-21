@@ -8,6 +8,11 @@ This OVMS plugin sends live telemetry data from the vehicle to ABRP to be used
 for the route planning process and appropriate updates to the plan along the way
 based on live information.
 
+## Requirements
+
+- **OVMS firmware version**: `3.3.004` or newer  
+  This plugin requires features introduced in OVMS firmware version `3.3.004`.
+
 ## Installation
 
 ### Obtain Live Data Token
