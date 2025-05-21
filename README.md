@@ -31,24 +31,21 @@ based on live information.
 7. Copy the content of the `ovmsmain.js` file in this repository to that new
    file and **Save**
 
-### Install the "GoDaddy Class 2 Certification Authority Root Certificate - G2" in OVMS
+### Install or update the trusted root CA in OVMS
 
-A recent change to the APRB API means a new CA certificate is required. This 
-requires a "GoDaddy Class 2 Certification Authority Root Certificate - G2"  ([gdroot-g2.crt](https://certs.godaddy.com/repository/gdroot-g2.crt)) 
-to be installed into OVMS as per the instructions at the [OVMS SSL/TLS UserGuide](https://docs.openvehicles.com/en/latest/userguide/ssltls.html)
-
-The [gdroot-g2.crt](https://certs.godaddy.com/repository/gdroot-g2.crt) can be downloaded from the [GoDaddy Certs Repository](https://certs.godaddy.com/repository/).
+OVMS includes a limited amount of trusted CA. We need to import additionnal ones for abrp.js to work.
 
 1. Login to the
    [OVMS web console](https://docs.openvehicles.com/en/latest/userguide/installation.html#initial-connection-wifi-and-browser)
 2. Navigate to the **Tools** -> **Editor** menu item
 3. Create a new `trustedca` directory in `/store/` if it does not exist
-4. Create a new `gdroot-g2.crt` file in the `/store/trustedca` directory
-5. Copy the contents of the `gdroot-g2.crt` file into that file
+4. For each certificate file (.crt or .pem) in [trustedca](/trustedca) create a new file in the `/store/trustedca` directory
+5. Copy the contents of the certificate file into that file
 6. Navigate to the **Tools** -> **Shell** menu item
 7. Execute the following message: `tls trust reload`
-8. Execute the following message: `tls trust list` and confirm that
-   `gdroot-g2.crt` shows up in the list
+8. Execute the following message: `tls trust list` to confirm that the new roots are trusted.
+
+More information on the trusted CA can be found in the [trustedca](/trustedca/README.md) folder
 
 ### Configure Plugin
 
