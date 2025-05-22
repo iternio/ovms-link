@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Version 2.2.0, 2025-05-21, `kezarjg`
+
+- Introduced a centralized metricMap to define and compute telemetry parameters in a modular, declarative format.
+- Added support for vehicle-specific metric overrides via new overrideMetricMap() function.
+- New metrics added to the telemetry map:
+  - `hvac_power`, `hvac_setpoint`, `cabin_temp`
+  - Tire pressure metrics for all four wheels
+  - `soe` (State of Energy)
+
 ## Version 2.1.0, 2024-09-24, `kezarjg`
 
 - Programattically determine what vehicle metrics are supported and only add supported metrics to the telemetry object.
