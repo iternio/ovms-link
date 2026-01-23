@@ -28,12 +28,11 @@ based on live information.
 1. Login to the
    [OVMS web console](https://docs.openvehicles.com/en/latest/userguide/installation.html#initial-connection-wifi-and-browser)
 2. Navigate to the **Tools** -> **Editor** menu item
-3. Create a new `lib` directory in `/store/scripts` if it does not exist
-4. Create a new `abrp.js` file in the `/store/scripts/lib` directory
-5. Copy the content of the `lib/abrp.js` file in this repository to that new
-   file and save
-6. Create a new `ovmsmain.js` file in `/store/scripts` if it does not exist
-7. Copy the content of the `ovmsmain.js` file in this repository to that new
+3. Use `/store/scripts/lib/abrp.js` for **Path** and press **Load**
+4. Copy the content of the `lib/abrp.js` file in this repository to that
+   file and **Save**
+5. Use `/store/scripts/ovmsmain.js` for **Path** and press **Load**
+6. Copy the content of the `ovmsmain.js` file in this repository to that
    file and **Save**
 
 ### Install or update the trusted root CA in OVMS
