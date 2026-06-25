@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## Version 2.3.0, 2026-06-25, `kezarjg`
+
+- Switched telemetry to batched bulk uploads (`/1/tlm/bulk`) behind a queue, with
+  GPS-time gating so points are only sent once a valid UTC time is known.
+- Reliability: the queue is cleared only when the API confirms success (HTTP 200
+  *and* body `status: "ok"`), the in-flight batch is removed by identity, and queue
+  overflow can no longer discard never-sent points — closing several data-loss paths.
+- Session handling: a single level-based handler drives the four session events, so a
+  `charge.stop` no longer kills the sampler mid-drive, a reboot while parked-and-charging
+  resumes immediately, overlapping on+charging no longer double-subscribes, and
+  `send(0)`/`send(1)` teardown is symmetric with setup.
+- Charge-power deadband: charging-power changes under 1 kW no longer force a queued
+  point, cutting the DC fast-charge point flood without losing SoC progression or the
+  charge curve.
+- Fixed AC-charge send cadence on Toyota e-TNGA (`SUBSOL`/`TOYBZ4X`): a momentarily-absent
+  `is_parked` no longer throttles AC charging onto the stale-connection cadence.
+- Restored median power/speed smoothing while driving; charging sends instantaneous power.
+- Metrics: wired `capacity` and derived `soe`; `hvac_power` is now supplied only via
+  vehicle overrides (incl. Toyota e-TNGA); fixed tyre pressure to read the `v.t.pressure` vector.
+- Fixed a Nissan Leaf range-override bug.
+- Added a unit-test suite (`lib/abrp.test.js`) covering the telemetry pipeline, cadence
+  selector, metric derivations, and vehicle overrides.
+
 ## Version 2.2.0, 2025-05-21, `kezarjg`
 
 - Introduced a centralized metricMap to define and compute telemetry parameters in a modular, declarative format.
