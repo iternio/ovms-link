@@ -1,6 +1,6 @@
 {
   "name": "ovms-link",
-  "version": "2.0.0",
+  "version": "2.3.0",
   "description": "ovms-link",
   "main": "abrp.js",
   "private": true,
@@ -12,5 +12,9 @@
     "eslint-plugin-jest": "^26.5.1",
     "jest": "^28.1.0",
     "prettier": "^2.6.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": ["<rootDir>/jest.setup.js"]
   }
 }
