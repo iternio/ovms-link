@@ -24,5 +24,11 @@
     "ecmaVersion": 2015
   },
   "plugins": ["jest"],
-  "rules": {}
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.test.js", "jest.setup.js"],
+      "parserOptions": { "ecmaVersion": 2021 }
+    }
+  ]
 }
