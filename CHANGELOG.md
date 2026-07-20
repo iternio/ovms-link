@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## Version 2.3.1, 2026-07-20, `kezarjg`
+
+- Fix: correct the inverted battery-power sign on smart 453/forfour (`SQ`) and smart
+  ED/fortwo (`SE`). Both OVMS smart modules report `v.b.power` with the wrong sign —
+  negative while driving (consuming), positive while charging — the opposite of the
+  OVMS core / Iternio convention. ABRP uses `power` for consumption calibration, so it
+  read consumption as regen and the calibrated reference consumption drifted toward zero
+  (issue #40). `overrideMetricMap` now corrects `power` for these vehicles by keeping the
+  module's power magnitude and taking its sign from `v.b.current`, which the same modules
+  report correctly. This is self-healing: `v.b.current` is correct in both the current
+  (buggy) and a future upstream-fixed firmware, so once the module's `v.b.power` sign is
+  fixed the correction becomes a no-op — no plugin change needed to retire it. Only
+  `power` is affected; `current`, `is_charging`, and `is_dcfc` are unchanged. Upstream
+  firmware bugs filed separately against `vehicle_smarteq` and `vehicle_smarted`.
+
 ## Version 2.3.0, 2026-06-25, `kezarjg`
 
 - Switched telemetry to batched bulk uploads (`/1/tlm/bulk`) behind a queue, with
